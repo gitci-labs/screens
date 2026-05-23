@@ -48,4 +48,48 @@ describe('GitCI manifest schemas', () => {
     expect(validate!.errors).toEqual(null)
     expect(valid).toBe(true)
   })
+
+  it('validates a generated output manifest shape', () => {
+    const validate = ajv.getSchema('https://screens.gitci.com/schemas/output-manifest.gitci.schema.json')
+    expect(validate, 'Missing output manifest schema').toBeDefined()
+    const valid = validate!({
+      schemaVersion: 1,
+      buildId: 'launch-2026-05-23T06-00-00Z',
+      sceneSet: {
+        id: 'launch',
+        name: 'Launch Screens'
+      },
+      targets: [
+        {
+          id: 'appstore.iphone.6_9.portrait',
+          width: 1320,
+          height: 2868,
+          displayGapPx: 80,
+          appearance: 'light',
+          screenshots: [
+            {
+              slotId: 'span',
+              variantId: 'default',
+              sceneTemplate: 'example.minimal.split-proof',
+              path: 'appstore.iphone.6_9.portrait/04-span-2.png',
+              width: 1320,
+              height: 2868,
+              span: 2,
+              spanIndex: 1,
+              compositeWidth: 2720,
+              compositeHeight: 2868,
+              clip: {
+                x: 1400,
+                y: 0,
+                width: 1320,
+                height: 2868
+              }
+            }
+          ]
+        }
+      ]
+    })
+    expect(validate!.errors).toEqual(null)
+    expect(valid).toBe(true)
+  })
 })

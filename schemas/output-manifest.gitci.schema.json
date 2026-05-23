@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://screens.gitci.com/schemas/output-manifest.gitci.schema.json",
+  "title": "GitCI Screens Output Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "buildId", "sceneSet", "targets"],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "buildId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sceneSet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "targets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "width",
+          "height",
+          "displayGapPx",
+          "appearance",
+          "screenshots"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "width": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "height": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "displayGapPx": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "appearance": {
+            "enum": ["light", "dark", "automatic"]
+          },
+          "screenshots": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "slotId",
+                "variantId",
+                "sceneTemplate",
+                "path",
+                "width",
+                "height",
+                "span",
+                "spanIndex",
+                "compositeWidth",
+                "compositeHeight",
+                "clip"
+              ],
+              "properties": {
+                "slotId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "variantId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "sceneTemplate": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "path": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "width": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "height": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "span": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "spanIndex": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "compositeWidth": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "compositeHeight": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "clip": {
+                  "$ref": "#/$defs/clipRect"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "clipRect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "width", "height"],
+      "properties": {
+        "x": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "y": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}

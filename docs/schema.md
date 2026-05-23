@@ -96,3 +96,9 @@ Scene template manifests must include renderable module metadata:
 ```
 
 Package entries such as `@gitci/screens-templates-core` are passed through. Relative entries are resolved from the manifest directory and written into the render plan so the Node renderer can generate a Vite registry without rediscovering files.
+
+## Output Manifest
+
+`manifest.gitci-output.json` is generated next to `plan.gitci-render.json` after a successful build. It uses `schemas/output-manifest.gitci.schema.json` and is intended for galleries, CI artifacts, and future GUI inspection.
+
+Each screenshot entry records the final upload image dimensions plus the source composite scene size, display gap, span count, span index, and clip rectangle. Consumers can reconstruct a wide scene strip from the manifest without re-running the planner.

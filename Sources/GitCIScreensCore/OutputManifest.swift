@@ -20,6 +20,7 @@ public struct OutputManifest: Codable, Equatable, Sendable {
                 appearance: target.appearance,
                 screenshots: target.outputs.map { output in
                     OutputManifestScreenshot(
+                        locale: output.locale,
                         slotId: output.slotId,
                         variantId: output.variantId,
                         sceneTemplate: output.sceneTemplate,
@@ -83,6 +84,7 @@ public struct OutputManifestTarget: Codable, Equatable, Sendable {
 }
 
 public struct OutputManifestScreenshot: Codable, Equatable, Sendable {
+    public var locale: RenderPlanLocale?
     public var slotId: String
     public var variantId: String
     public var sceneTemplate: String
@@ -96,6 +98,7 @@ public struct OutputManifestScreenshot: Codable, Equatable, Sendable {
     public var clip: ClipRect
 
     public init(
+        locale: RenderPlanLocale? = nil,
         slotId: String,
         variantId: String,
         sceneTemplate: String,
@@ -108,6 +111,7 @@ public struct OutputManifestScreenshot: Codable, Equatable, Sendable {
         compositeHeight: Int,
         clip: ClipRect
     ) {
+        self.locale = locale
         self.slotId = slotId
         self.variantId = variantId
         self.sceneTemplate = sceneTemplate
@@ -133,10 +137,12 @@ public struct OutputManifestScreenshot: Codable, Equatable, Sendable {
         case compositeWidth
         case compositeHeight
         case clip
+        case locale
     }
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.locale = try container.decodeIfPresent(RenderPlanLocale.self, forKey: .locale)
         self.slotId = try container.decode(String.self, forKey: .slotId)
         self.variantId = try container.decode(String.self, forKey: .variantId)
         self.sceneTemplate = try container.decode(String.self, forKey: .sceneTemplate)

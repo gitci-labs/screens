@@ -22,6 +22,15 @@
         "base64": { "type": "string" },
         "id": { "type": "string" }
       }
+    },
+    "localizedString": {
+      "type": "object",
+      "required": ["kind", "key"],
+      "properties": {
+        "kind": { "const": "localized" },
+        "key": { "type": "string", "minLength": 1 },
+        "fallback": { "type": "string" }
+      }
     }
   },
   "properties": {
@@ -56,6 +65,21 @@
         "overrides": {
           "type": "object",
           "additionalProperties": { "type": "string" }
+        }
+      }
+    },
+    "locales": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "strings"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "name": { "type": "string" },
+          "strings": {
+            "type": "object",
+            "additionalProperties": { "type": "string" }
+          }
         }
       }
     },

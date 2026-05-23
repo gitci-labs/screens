@@ -63,6 +63,8 @@ gitci/screens/build/launch/
 
 The zip archive at `gitci/screens/build/launch.zip` is suitable for CI artifacts or handoff. The gallery at `gitci/screens/build/launch/gallery/index.html` shows discovered templates plus built outputs and simulated App Store gaps.
 
+If the scene set declares `locales`, export repeats the selected slots for each locale and writes files under `gitci/screens/build/launch/<locale>/<target>/...`. Keep localized marketing copy in the scene-set manifest with `{ "kind": "localized", "key": "...", "fallback": "..." }` props so the renderer still receives plain strings.
+
 When iterating on one step, the underlying commands are still available:
 
 ```sh

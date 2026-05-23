@@ -23,6 +23,10 @@ type Clip = {
 }
 
 type Output = {
+  locale?: {
+    id: string
+    name?: string
+  }
   slotId: string
   variantId: string
   sceneTemplate: string

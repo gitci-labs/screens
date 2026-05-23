@@ -1255,6 +1255,7 @@ private struct EncodedSceneSetManifest: Encodable {
         case targets
         case appearanceByTarget
         case theme
+        case locales
         case slots
     }
 
@@ -1269,6 +1270,7 @@ private struct EncodedSceneSetManifest: Encodable {
         try container.encode(manifest.targets, forKey: .targets)
         try container.encodeIfPresent(manifest.appearanceByTarget, forKey: .appearanceByTarget)
         try container.encodeIfPresent(manifest.theme, forKey: .theme)
+        try container.encodeIfPresent(manifest.locales, forKey: .locales)
         try container.encode(manifest.slots, forKey: .slots)
     }
 }

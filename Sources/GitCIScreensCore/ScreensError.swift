@@ -19,6 +19,7 @@ public enum ScreensError: Error, CustomStringConvertible, Equatable {
     case invalidTemplateEntry(String)
     case assetNotFound(String)
     case remoteAssetDisabled(String)
+    case missingLocalizedString(localeID: String, key: String)
     case noOutputs(targetID: String)
     case tooManyOutputs(targetID: String, count: Int, max: Int)
     case outputCollision(String)
@@ -65,6 +66,8 @@ public enum ScreensError: Error, CustomStringConvertible, Equatable {
             return "Asset not found: \(path)."
         case let .remoteAssetDisabled(url):
             return "Remote assets are disabled, but found \(url)."
+        case let .missingLocalizedString(localeID, key):
+            return "Locale \(localeID) is missing localized string \(key)."
         case let .noOutputs(targetID):
             return "Target \(targetID) would not produce any screenshots."
         case let .tooManyOutputs(targetID, count, max):

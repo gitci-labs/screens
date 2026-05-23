@@ -29,7 +29,7 @@ Phase 1 uses versioned JSON manifests that Swift can parse without executing Rea
 
 ## Scene Set
 
-`scene-sets/<id>/scene-set.gitci.json` declares targets, appearance, theme, slots, variants, and props.
+`scene-sets/<id>/scene-set.gitci.json` declares targets, appearance, theme, optional locales, slots, variants, and props.
 
 `entry` and `export` are optional metadata for the matching TypeScript authoring file. The MVP planner still reads the JSON manifest directly; future GUI/codegen work can use the TypeScript entry point as the editable source.
 
@@ -45,6 +45,49 @@ Asset references are resolved relative to the scene set directory:
 ```
 
 Remote assets are rejected unless `assetPolicy.allowRemoteAssets` is true.
+
+Localized copy is declared once per scene set and referenced from any prop with a localized string object. The planner resolves these objects to plain strings before rendering, repeats the output set once per locale, and writes localized files under `<locale>/<target>/...`:
+
+```json
+{
+  "locales": [
+    {
+      "id": "en-US",
+      "name": "English (US)",
+      "strings": {
+        "hero.headline": "Ship screenshots from source"
+      }
+    },
+    {
+      "id": "ja-JP",
+      "name": "Japanese",
+      "strings": {
+        "hero.headline": "ソースからスクリーンショットを生成"
+      }
+    }
+  ],
+  "slots": [
+    {
+      "id": "hero",
+      "variants": [
+        {
+          "id": "default",
+          "sceneTemplate": "gitci.core.hero-device",
+          "props": {
+            "headline": {
+              "kind": "localized",
+              "key": "hero.headline",
+              "fallback": "Ship screenshots"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+If a localized string key is missing and no `fallback` is provided, validation and planning fail with `locale.string-missing`.
 
 Themes can also map named CSS vars to reusable palette stops. Stops are normalized from `0` to `1`, so differently sized palettes still map predictably:
 
@@ -128,6 +171,6 @@ Scene set template manifests are browseable presets for creating a project scene
 
 ## Output Manifest
 
-`manifest.gitci-output.json` is generated next to `plan.gitci-render.json` after a successful build. It uses `schemas/output-manifest.gitci.schema.json` and is intended for galleries, CI artifacts, and future GUI inspection.
+`manifest.gitci-output.json` is generated next to `plan.gitci-render.json` after a successful build. It uses `schemas/output-manifest.gitci.schema.json` and is intended for galleries, CI artifacts, and future GUI inspection. Localized screenshots include `locale` metadata on each screenshot entry.
 
 Each screenshot entry records the final upload image dimensions plus the source composite scene size, display gap, span count, span index, and clip rectangle. Consumers can reconstruct a wide scene strip from the manifest without re-running the planner.

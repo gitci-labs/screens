@@ -16,6 +16,11 @@ public struct RenderPlanSceneSet: Codable, Equatable, Sendable {
     public var name: String?
 }
 
+public struct RenderPlanLocale: Codable, Equatable, Sendable {
+    public var id: String
+    public var name: String?
+}
+
 public struct RenderPlanRegistry: Codable, Equatable, Sendable {
     public var moduleURL: String
     public var sceneTemplates: [RenderPlanRegistryEntry] = []
@@ -38,6 +43,7 @@ public struct RenderPlanTarget: Codable, Equatable, Sendable {
 }
 
 public struct RenderPlanOutput: Codable, Equatable, Sendable {
+    public var locale: RenderPlanLocale?
     public var slotId: String
     public var variantId: String
     public var sceneTemplate: String

@@ -83,15 +83,20 @@ public struct ProjectValidator: Sendable {
                     targetId: target.id
                 ))
             }
-            for output in target.outputs.prefix(3) {
-                if output.props.objectValue?["headline"]?.stringValue?.isEmpty ?? true {
-                    warnings.append(ProjectDiagnostic(
-                        severity: .warning,
-                        code: "metadata.first-three-missing-headline",
-                        message: "\(target.id) \(output.outputPath) is in the first three screenshots and has no headline.",
-                        targetId: target.id,
-                        outputPath: output.outputPath
-                    ))
+            let outputsByLocale = Dictionary(grouping: target.outputs) { output in
+                output.locale?.id ?? ""
+            }
+            for localeID in outputsByLocale.keys.sorted() {
+                for output in (outputsByLocale[localeID] ?? []).prefix(3) {
+                    if output.props.objectValue?["headline"]?.stringValue?.isEmpty ?? true {
+                        warnings.append(ProjectDiagnostic(
+                            severity: .warning,
+                            code: "metadata.first-three-missing-headline",
+                            message: "\(target.id) \(output.outputPath) is in the first three screenshots and has no headline.",
+                            targetId: target.id,
+                            outputPath: output.outputPath
+                        ))
+                    }
                 }
             }
         }
@@ -150,6 +155,13 @@ public struct ProjectValidator: Sendable {
                 code: "asset.remote-disabled",
                 message: screensError.description,
                 assetPath: url
+            )
+        case let .missingLocalizedString(localeID, _):
+            return ProjectDiagnostic(
+                severity: .error,
+                code: "locale.string-missing",
+                message: screensError.description,
+                sourceId: localeID
             )
         case let .templateSourceNotFound(sourceID, path):
             return ProjectDiagnostic(

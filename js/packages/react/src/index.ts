@@ -49,6 +49,11 @@ export type SceneSetDefinition = {
   targets: string[]
   appearanceByTarget?: Record<string, Appearance>
   theme?: ThemeSelection
+  locales?: Array<{
+    id: string
+    name?: string
+    strings: Record<string, string>
+  }>
   slots: SceneSlot[]
 }
 
@@ -99,6 +104,10 @@ export type SpanLayout = {
 }
 
 export type RenderSceneContext = {
+  locale?: {
+    id: string
+    name?: string
+  }
   slotId: string
   variantId: string
   target: RenderTargetContext

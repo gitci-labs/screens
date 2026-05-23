@@ -174,6 +174,100 @@ final class WorkspacePlanningTests: XCTestCase {
         XCTAssertEqual(iphoneScreenshots[3].clip, ClipRect(x: 1400, y: 0, width: 1320, height: 2868))
     }
 
+    func testPlannerExpandsLocalizedSceneSets() throws {
+        let root = try exampleRoot()
+        let workspace = try ScreensWorkspace.load(root: root)
+        var sceneSet = try workspace.resolveSceneSet(id: "launch")
+        sceneSet.manifest.targets = ["appstore.iphone.6_9.portrait"]
+        sceneSet.manifest.locales = [
+            SceneSetLocale(
+                id: "en-US",
+                name: "English (US)",
+                strings: [
+                    "hero.headline": "Ship screenshots from source"
+                ]
+            ),
+            SceneSetLocale(
+                id: "ja-JP",
+                name: "Japanese",
+                strings: [
+                    "hero.headline": "ソースからスクリーンショットを生成"
+                ]
+            )
+        ]
+        sceneSet.manifest.slots = [
+            SceneSlot(
+                id: "hero",
+                label: nil,
+                selectedVariant: nil,
+                variants: [
+                    SceneVariant(
+                        id: "default",
+                        sceneTemplate: "gitci.core.hero-device",
+                        includeTargets: nil,
+                        excludeTargets: nil,
+                        props: .object([
+                            "headline": .object([
+                                "kind": .string("localized"),
+                                "key": .string("hero.headline"),
+                                "fallback": .string("Ship screenshots")
+                            ]),
+                            "screenshot": .object([
+                                "kind": .string("asset"),
+                                "path": .string("../../assets/iphone/inbox.svg")
+                            ]),
+                            "device": .string("iphone-2d")
+                        ])
+                    )
+                ]
+            )
+        ]
+
+        let plan = try RenderPlanner(workspace: workspace).makePlan(
+            sceneSet: sceneSet,
+            outputDirectory: root.appendingPathComponent("build/test")
+        )
+        let outputs = try XCTUnwrap(plan.targets.first?.outputs)
+        let manifest = OutputManifest(plan: plan)
+        let screenshots = try XCTUnwrap(manifest.targets.first?.screenshots)
+
+        XCTAssertEqual(outputs.map { $0.locale?.id }, ["en-US", "ja-JP"])
+        XCTAssertEqual(outputs.map(\.outputPath), [
+            "en-US/appstore.iphone.6_9.portrait/01-hero.png",
+            "ja-JP/appstore.iphone.6_9.portrait/01-hero.png"
+        ])
+        XCTAssertEqual(outputs[0].props.objectValue?["headline"]?.stringValue, "Ship screenshots from source")
+        XCTAssertEqual(outputs[1].props.objectValue?["headline"]?.stringValue, "ソースからスクリーンショットを生成")
+        XCTAssertEqual(screenshots.map { $0.locale?.id }, ["en-US", "ja-JP"])
+    }
+
+    func testValidationReportsMissingLocalizedString() throws {
+        let root = try exampleRoot()
+        let workspace = try ScreensWorkspace.load(root: root)
+        var sceneSet = try workspace.resolveSceneSet(id: "launch")
+        sceneSet.manifest.targets = ["appstore.iphone.6_9.portrait"]
+        sceneSet.manifest.locales = [
+            SceneSetLocale(id: "en-US", name: nil, strings: [:])
+        ]
+        sceneSet.manifest.slots[0].variants[0].props = .object([
+            "headline": .object([
+                "kind": .string("localized"),
+                "key": .string("hero.missing")
+            ]),
+            "screenshot": .object([
+                "kind": .string("asset"),
+                "path": .string("../../assets/iphone/inbox.svg")
+            ])
+        ])
+
+        let report = ProjectValidator(workspace: workspace).validate(sceneSet: sceneSet)
+        let diagnostic = try XCTUnwrap(report.diagnostics.first)
+
+        XCTAssertTrue(report.hasErrors)
+        XCTAssertEqual(diagnostic.code, "locale.string-missing")
+        XCTAssertEqual(diagnostic.sourceId, "en-US")
+    }
+
     func testOutputManifestDecodesOlderBuildIndexes() throws {
         let json = """
         {

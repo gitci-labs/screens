@@ -79,6 +79,9 @@
                 "clip"
               ],
               "properties": {
+                "locale": {
+                  "$ref": "#/$defs/locale"
+                },
                 "slotId": {
                   "type": "string",
                   "minLength": 1
@@ -150,6 +153,20 @@
         "height": {
           "type": "integer",
           "minimum": 1
+        }
+      }
+    },
+    "locale": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string"
         }
       }
     }

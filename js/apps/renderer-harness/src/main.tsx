@@ -14,6 +14,10 @@ type RenderPlan = {
     appearance: 'light' | 'dark'
     themeVars: Record<string, string>
     outputs: Array<{
+      locale?: {
+        id: string
+        name?: string
+      }
       slotId: string
       variantId: string
       sceneTemplate: string
@@ -90,6 +94,7 @@ function RenderOne({
       <Template
         props={output.props}
         context={{
+          locale: output.locale,
           slotId: output.slotId,
           variantId: output.variantId,
           target: {

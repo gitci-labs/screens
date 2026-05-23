@@ -60,6 +60,8 @@ public struct GalleryGenerator: Sendable {
         return manifest.targets.flatMap { target in
             target.screenshots.map { screenshot in
                 GalleryBuiltOutput(
+                    localeId: screenshot.locale?.id,
+                    localeName: screenshot.locale?.name,
                     targetId: target.id,
                     slotId: screenshot.slotId,
                     variantId: screenshot.variantId,
@@ -173,9 +175,13 @@ public struct GalleryGenerator: Sendable {
             </article>
             """
         }.joined(separator: "\n")
-        let groupedOutputs = Dictionary(grouping: builtOutputs, by: \.targetId)
+        let groupedOutputs = Dictionary(grouping: builtOutputs) { output in
+            "\(output.localeId ?? "default")|\(output.targetId)"
+        }
             .sorted { $0.key < $1.key }
-            .map { targetId, outputs in
+            .map { _, outputs in
+                let first = outputs[0]
+                let heading = first.localeId.map { "\($0) / \(first.targetId)" } ?? first.targetId
                 let displayGap = outputs.first.map { output in
                     max(6, min(40, Int(round(Double(output.displayGapPx) * 220.0 / Double(output.width)))))
                 } ?? 28
@@ -195,7 +201,7 @@ public struct GalleryGenerator: Sendable {
                 }.joined(separator: "\n")
                 return """
                 <section class="target">
-                  <h3>\(escape(targetId))</h3>
+                  <h3>\(escape(heading))</h3>
                   <div class="strip" style="gap: \(displayGap)px">\(cards)</div>
                 </section>
                 """
@@ -305,6 +311,8 @@ public struct GallerySceneSet: Codable, Equatable, Sendable {
 }
 
 public struct GalleryBuiltOutput: Codable, Equatable, Sendable {
+    public var localeId: String?
+    public var localeName: String?
     public var targetId: String
     public var slotId: String
     public var variantId: String

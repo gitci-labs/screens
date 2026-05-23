@@ -36,60 +36,66 @@ public struct RenderPlanner: Sendable {
             var outputs: [RenderPlanOutput] = []
             var usedOutputPaths = Set<String>()
 
-            for slot in sceneSet.manifest.slots {
-                guard let variant = try selectedVariant(in: slot, targetID: targetID) else {
-                    continue
-                }
-                guard let template = workspace.sceneTemplates[variant.sceneTemplate] else {
-                    throw ScreensError.unknownSceneTemplate(variant.sceneTemplate)
-                }
-                try validateSupportedTarget(template: template, targetID: targetID)
-                try validateRequiredProps(template: template, props: variant.props)
-                usedSceneTemplateIDs.insert(template.id)
-
-                let span = SceneSpanCalculator.requiredSpan(
-                    target: target,
-                    constraints: template.constraints
-                )
-                let compositeWidth = SceneSpanCalculator.compositeWidth(target: target, span: span)
-                let resolvedProps = try resolveAssets(
-                    in: variant.props,
-                    relativeTo: sceneSet.directoryURL,
-                    allowRemoteAssets: workspace.project?.assetPolicy?.allowRemoteAssets ?? false
-                )
-
-                for indexInSpan in 0..<span {
-                    let ordinal = outputs.count + 1
-                    let filename = span == 1
-                        ? "\(Self.zeroPadded(ordinal))-\(Self.slug(slot.id)).png"
-                        : "\(Self.zeroPadded(ordinal))-\(Self.slug(slot.id))-\(indexInSpan + 1).png"
-                    let outputPath = "\(target.id)/\(filename)"
-                    guard usedOutputPaths.insert(outputPath).inserted else {
-                        throw ScreensError.outputCollision(outputPath)
+            for locale in normalizedLocales(sceneSet.manifest.locales) {
+                var localeOutputCount = 0
+                for slot in sceneSet.manifest.slots {
+                    guard let variant = try selectedVariant(in: slot, targetID: targetID) else {
+                        continue
                     }
-                    outputs.append(RenderPlanOutput(
-                        slotId: slot.id,
-                        variantId: variant.id,
-                        sceneTemplate: variant.sceneTemplate,
-                        span: span,
-                        compositeWidth: compositeWidth,
-                        compositeHeight: target.height,
-                        clip: SceneSpanCalculator.clipRect(target: target, indexInSpan: indexInSpan),
-                        outputPath: outputPath,
-                        props: resolvedProps
-                    ))
+                    guard let template = workspace.sceneTemplates[variant.sceneTemplate] else {
+                        throw ScreensError.unknownSceneTemplate(variant.sceneTemplate)
+                    }
+                    try validateSupportedTarget(template: template, targetID: targetID)
+                    try validateRequiredProps(template: template, props: variant.props)
+                    usedSceneTemplateIDs.insert(template.id)
+
+                    let span = SceneSpanCalculator.requiredSpan(
+                        target: target,
+                        constraints: template.constraints
+                    )
+                    let compositeWidth = SceneSpanCalculator.compositeWidth(target: target, span: span)
+                    let localizedProps = try resolveLocalizedValues(in: variant.props, locale: locale)
+                    let resolvedProps = try resolveAssets(
+                        in: localizedProps,
+                        relativeTo: sceneSet.directoryURL,
+                        allowRemoteAssets: workspace.project?.assetPolicy?.allowRemoteAssets ?? false
+                    )
+
+                    for indexInSpan in 0..<span {
+                        localeOutputCount += 1
+                        let filename = span == 1
+                            ? "\(Self.zeroPadded(localeOutputCount))-\(Self.slug(slot.id)).png"
+                            : "\(Self.zeroPadded(localeOutputCount))-\(Self.slug(slot.id))-\(indexInSpan + 1).png"
+                        let outputPath = Self.outputPath(targetID: target.id, locale: locale, filename: filename)
+                        guard usedOutputPaths.insert(outputPath).inserted else {
+                            throw ScreensError.outputCollision(outputPath)
+                        }
+                        outputs.append(RenderPlanOutput(
+                            locale: locale.map { RenderPlanLocale(id: $0.id, name: $0.name) },
+                            slotId: slot.id,
+                            variantId: variant.id,
+                            sceneTemplate: variant.sceneTemplate,
+                            span: span,
+                            compositeWidth: compositeWidth,
+                            compositeHeight: target.height,
+                            clip: SceneSpanCalculator.clipRect(target: target, indexInSpan: indexInSpan),
+                            outputPath: outputPath,
+                            props: resolvedProps
+                        ))
+                    }
+                }
+
+                guard localeOutputCount <= target.maxScreenshots else {
+                    throw ScreensError.tooManyOutputs(
+                        targetID: locale.map { "\(target.id) locale \($0.id)" } ?? target.id,
+                        count: localeOutputCount,
+                        max: target.maxScreenshots
+                    )
                 }
             }
 
             guard !outputs.isEmpty else {
                 throw ScreensError.noOutputs(targetID: target.id)
-            }
-            guard outputs.count <= target.maxScreenshots else {
-                throw ScreensError.tooManyOutputs(
-                    targetID: target.id,
-                    count: outputs.count,
-                    max: target.maxScreenshots
-                )
             }
 
             planTargets.append(RenderPlanTarget(
@@ -260,6 +266,41 @@ public struct RenderPlanner: Sendable {
         }
     }
 
+    private func normalizedLocales(_ locales: [SceneSetLocale]?) -> [SceneSetLocale?] {
+        guard let locales, !locales.isEmpty else {
+            return [nil]
+        }
+        return locales.map(Optional.some)
+    }
+
+    private func resolveLocalizedValues(in value: JSONValue, locale: SceneSetLocale?) throws -> JSONValue {
+        try value.mapObjects { object in
+            guard object["kind"]?.stringValue == "localized" else {
+                return .object(object)
+            }
+            guard let key = object["key"]?.stringValue else {
+                return .object(object)
+            }
+            if let locale, let translated = locale.strings[key], !translated.isEmpty {
+                return .string(translated)
+            }
+            if let fallback = object["fallback"]?.stringValue {
+                return .string(fallback)
+            }
+            throw ScreensError.missingLocalizedString(
+                localeID: locale?.id ?? "default",
+                key: key
+            )
+        }
+    }
+
+    private static func outputPath(targetID: String, locale: SceneSetLocale?, filename: String) -> String {
+        guard let locale else {
+            return "\(targetID)/\(filename)"
+        }
+        return "\(pathComponent(locale.id))/\(targetID)/\(filename)"
+    }
+
     private static func matches(pattern: String, value: String) -> Bool {
         if pattern == "*" || pattern == value {
             return true
@@ -302,6 +343,15 @@ public struct RenderPlanner: Sendable {
         }
         let slug = String(scalars).lowercased()
         return slug.isEmpty ? "scene" : slug
+    }
+
+    private static func pathComponent(_ value: String) -> String {
+        let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-_"))
+        let scalars = value.unicodeScalars.map { scalar in
+            allowed.contains(scalar) ? Character(scalar) : "-"
+        }
+        let component = String(scalars)
+        return component.isEmpty ? "locale" : component
     }
 
     private static func colorAtStop(colors: [String], stop: Double) -> String {

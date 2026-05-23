@@ -8,6 +8,14 @@ Targets are data, not renderer logic. The built-in catalog currently includes th
 
 The accepted size lists follow Apple App Store Connect's screenshot specification reference. `displayGapPx` is not an upload requirement; it is an empirical preview/splitting value used when a single scene spans multiple App Store screenshot cards.
 
+Verified against Apple's App Store Connect screenshot specification reference on 2026-05-23:
+
+- iPhone 6.9-inch portrait accepts `1320x2868`, `1290x2796`, and `1260x2736`.
+- iPad 13-inch portrait accepts `2064x2752` and `2048x2732`.
+- Mac accepts 16:10 screenshots including `2880x1800`, `2560x1600`, `1440x900`, and `1280x800`.
+
+Reference: <https://developer.apple.com/help/app-store-connect/reference/screenshot-specifications>
+
 Scene span math:
 
 ```text

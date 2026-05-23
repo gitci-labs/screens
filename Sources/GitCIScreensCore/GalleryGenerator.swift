@@ -58,13 +58,15 @@ public struct GalleryGenerator: Sendable {
         }
         let manifest = try JSONDecoder.gitci.decode(OutputManifest.self, from: Data(contentsOf: manifestURL))
         return manifest.targets.flatMap { target in
-            target.screenshots.map { screenshot in
+            target.screenshots.enumerated().map { index, screenshot in
                 GalleryBuiltOutput(
                     variantGroupId: manifest.sceneSet.variantGroup?.id,
                     variantGroupName: manifest.sceneSet.variantGroup?.name,
                     localeId: screenshot.locale?.id,
                     localeName: screenshot.locale?.name,
                     targetId: target.id,
+                    screenshotIndex: index + 1,
+                    isFirstThree: index < 3,
                     slotId: screenshot.slotId,
                     variantId: screenshot.variantId,
                     path: screenshot.path,
@@ -193,6 +195,9 @@ public struct GalleryGenerator: Sendable {
                     max(6, min(40, Int(round(Double(output.displayGapPx) * 220.0 / Double(output.width)))))
                 } ?? 28
                 let cards = outputs.map { output in
+                    let firstThreeLabel = output.isFirstThree
+                        ? "<small class=\"priority\">Search/result slot \(output.screenshotIndex)</small>"
+                        : ""
                     let spanLabel = output.span > 1
                         ? "<small>Span \(output.spanIndex + 1)/\(output.span), clip x=\(output.clip.x), gap=\(output.displayGapPx)</small>"
                         : "<small>Single frame, clip x=\(output.clip.x)</small>"
@@ -204,6 +209,7 @@ public struct GalleryGenerator: Sendable {
                       <img src="../\(escapeAttribute(output.path))" alt="\(escapeAttribute(output.path))">
                       <span><strong>\(escape(output.slotId))</strong> / \(escape(output.variantId))</span>
                       <span>\(escape(output.path))</span>
+                      \(firstThreeLabel)
                       <small>\(String(output.width))x\(String(output.height))</small>
                       \(variantGroupLabel)
                       \(spanLabel)
@@ -248,6 +254,7 @@ public struct GalleryGenerator: Sendable {
             .shot img { display: block; width: 220px; height: 320px; object-fit: contain; object-position: top center; border-radius: 8px; background: #e2e8f0; box-shadow: 0 18px 44px rgb(15 23 42 / 0.16); }
             .shot span { display: block; margin-top: 10px; font-size: 13px; overflow-wrap: anywhere; }
             .shot small { display: block; margin-top: 4px; color: #64748b; }
+            .shot .priority { display: inline-block; color: #92400e; background: #fef3c7; border: 1px solid #fde68a; border-radius: 999px; padding: 3px 8px; }
           </style>
         </head>
         <body>
@@ -257,6 +264,7 @@ public struct GalleryGenerator: Sendable {
             <h2>Scene Sets</h2>
             <div class="grid">\(sceneSetCards)</div>
             <h2>Built Outputs</h2>
+            <p>The first three generated screenshots for each locale and target are highlighted because they can be the most visible store slots.</p>
             \(groupedOutputs.isEmpty ? "<p>No built output manifest found.</p>" : groupedOutputs)
             <h2>Packs</h2>
             <div class="grid">\(packCards)</div>
@@ -327,6 +335,8 @@ public struct GalleryBuiltOutput: Codable, Equatable, Sendable {
     public var localeId: String?
     public var localeName: String?
     public var targetId: String
+    public var screenshotIndex: Int
+    public var isFirstThree: Bool
     public var slotId: String
     public var variantId: String
     public var path: String

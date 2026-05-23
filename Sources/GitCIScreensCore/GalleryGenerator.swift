@@ -179,6 +179,21 @@ public struct GalleryGenerator: Sendable {
             </article>
             """
         }.joined(separator: "\n")
+        let targetControls = filterButtons(
+            label: "Targets",
+            attribute: "target",
+            values: Set(builtOutputs.map(\.targetId)).sorted()
+        )
+        let localeControls = filterButtons(
+            label: "Locales",
+            attribute: "locale",
+            values: Set(builtOutputs.map { $0.localeId ?? "default" }).sorted()
+        )
+        let variantGroupControls = filterButtons(
+            label: "Variant groups",
+            attribute: "variant-group",
+            values: Set(builtOutputs.map { $0.variantGroupId ?? "default" }).sorted()
+        )
         let groupedOutputs = Dictionary(grouping: builtOutputs) { output in
             "\(output.variantGroupId ?? "default")|\(output.localeId ?? "default")|\(output.targetId)"
         }
@@ -217,7 +232,7 @@ public struct GalleryGenerator: Sendable {
                     """
                 }.joined(separator: "\n")
                 return """
-                <section class="target">
+                <section class="target output-group" data-target="\(escapeAttribute(first.targetId))" data-locale="\(escapeAttribute(first.localeId ?? "default"))" data-variant-group="\(escapeAttribute(first.variantGroupId ?? "default"))">
                   <h3>\(escape(heading))</h3>
                   <div class="strip" style="gap: \(displayGap)px">\(cards)</div>
                 </section>
@@ -241,6 +256,11 @@ public struct GalleryGenerator: Sendable {
             ul { padding-left: 20px; line-height: 1.7; }
             code { background: #e2e8f0; padding: 2px 6px; border-radius: 6px; }
             a { color: #2563eb; }
+            .filters { display: flex; flex-wrap: wrap; gap: 14px; margin: 18px 0 22px; }
+            .filter-group { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+            .filter-group strong { font-size: 13px; color: #334155; }
+            .filter-button { border: 1px solid #cbd5e1; border-radius: 999px; background: #fff; color: #334155; padding: 6px 10px; font: inherit; font-size: 13px; cursor: pointer; }
+            .filter-button[aria-pressed="true"] { background: #0f172a; color: #fff; border-color: #0f172a; }
             .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
             .card { border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; padding: 18px; box-shadow: 0 12px 30px rgb(15 23 42 / 0.06); }
             .card h3 { margin: 0 0 10px; }
@@ -255,6 +275,7 @@ public struct GalleryGenerator: Sendable {
             .shot span { display: block; margin-top: 10px; font-size: 13px; overflow-wrap: anywhere; }
             .shot small { display: block; margin-top: 4px; color: #64748b; }
             .shot .priority { display: inline-block; color: #92400e; background: #fef3c7; border: 1px solid #fde68a; border-radius: 999px; padding: 3px 8px; }
+            .is-hidden { display: none; }
           </style>
         </head>
         <body>
@@ -265,6 +286,7 @@ public struct GalleryGenerator: Sendable {
             <div class="grid">\(sceneSetCards)</div>
             <h2>Built Outputs</h2>
             <p>The first three generated screenshots for each locale and target are highlighted because they can be the most visible store slots.</p>
+            \(builtOutputs.isEmpty ? "" : "<div class=\"filters\">\(targetControls)\(localeControls)\(variantGroupControls)</div>")
             \(groupedOutputs.isEmpty ? "<p>No built output manifest found.</p>" : groupedOutputs)
             <h2>Packs</h2>
             <div class="grid">\(packCards)</div>
@@ -293,8 +315,46 @@ public struct GalleryGenerator: Sendable {
               <li><a href="data/built-outputs.json">built-outputs.json</a></li>
             </ul>
           </main>
+          <script>
+            const activeFilters = { target: 'all', locale: 'all', 'variant-group': 'all' };
+            function applyFilters() {
+              document.querySelectorAll('.output-group').forEach((group) => {
+                const visible = Object.entries(activeFilters).every(([key, value]) => value === 'all' || group.getAttribute(`data-${key}`) === value);
+                group.classList.toggle('is-hidden', !visible);
+              });
+            }
+            document.querySelectorAll('.filter-button').forEach((button) => {
+              button.addEventListener('click', () => {
+                const key = button.dataset.filter;
+                const value = button.dataset.value;
+                activeFilters[key] = value;
+                document.querySelectorAll(`.filter-button[data-filter="${key}"]`).forEach((peer) => {
+                  peer.setAttribute('aria-pressed', String(peer === button));
+                });
+                applyFilters();
+              });
+            });
+          </script>
         </body>
         </html>
+        """
+    }
+
+    private static func filterButtons(label: String, attribute: String, values: [String]) -> String {
+        guard !values.isEmpty else {
+            return ""
+        }
+        let options = (["all"] + values).map { value in
+            let title = value == "all" ? "All" : value
+            return """
+            <button class="filter-button" type="button" data-filter="\(escapeAttribute(attribute))" data-value="\(escapeAttribute(value))" aria-pressed="\(value == "all" ? "true" : "false")">\(escape(title))</button>
+            """
+        }.joined(separator: "\n")
+        return """
+        <div class="filter-group">
+          <strong>\(escape(label))</strong>
+          \(options)
+        </div>
         """
     }
 

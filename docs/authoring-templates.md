@@ -24,6 +24,7 @@ Project-local templates live under `gitci/screens/packs/<pack-id>/scene-template
   "entry": "./template.tsx",
   "export": "SplitProofScene",
   "minAspectRatio": 0.94,
+  "supportedTargets": ["appstore.iphone.*", "appstore.ipad.*"],
   "propsSchema": {
     "type": "object",
     "required": ["headline", "screenshot"],
@@ -34,6 +35,8 @@ Project-local templates live under `gitci/screens/packs/<pack-id>/scene-template
   }
 }
 ```
+
+`supportedTargets` is enforced during planning. If a scene set selects the template for a target that does not match one of those wildcard patterns, the build fails before rendering. Leave it empty only for templates that truly work across every target family.
 
 The Node renderer turns the selected scene template manifests into a generated Vite registry for the build. Remote template repositories are intentionally still out of scope.
 

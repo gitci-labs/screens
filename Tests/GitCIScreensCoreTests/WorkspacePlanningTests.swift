@@ -78,6 +78,46 @@ final class WorkspacePlanningTests: XCTestCase {
         XCTAssertEqual(iphoneScreenshots[3].clip, ClipRect(x: 1400, y: 0, width: 1320, height: 2868))
     }
 
+    func testOutputManifestDecodesOlderBuildIndexes() throws {
+        let json = """
+        {
+          "schemaVersion": 1,
+          "buildId": "old",
+          "sceneSet": {
+            "id": "launch"
+          },
+          "targets": [
+            {
+              "id": "appstore.iphone.6_9.portrait",
+              "width": 1320,
+              "height": 2868,
+              "appearance": "light",
+              "screenshots": [
+                {
+                  "slotId": "hero",
+                  "variantId": "default",
+                  "sceneTemplate": "gitci.core.hero-device",
+                  "path": "appstore.iphone.6_9.portrait/01-hero.png",
+                  "width": 1320,
+                  "height": 2868,
+                  "span": 1
+                }
+              ]
+            }
+          ]
+        }
+        """
+        let manifest = try JSONDecoder.gitci.decode(OutputManifest.self, from: Data(json.utf8))
+        let target = try XCTUnwrap(manifest.targets.first)
+        let screenshot = try XCTUnwrap(target.screenshots.first)
+
+        XCTAssertEqual(target.displayGapPx, 0)
+        XCTAssertEqual(screenshot.spanIndex, 0)
+        XCTAssertEqual(screenshot.compositeWidth, 1320)
+        XCTAssertEqual(screenshot.compositeHeight, 2868)
+        XCTAssertEqual(screenshot.clip, ClipRect(x: 0, y: 0, width: 1320, height: 2868))
+    }
+
     func testSpecificAppearancePatternWinsOverBroadPattern() throws {
         let root = try exampleRoot()
         let workspace = try ScreensWorkspace.load(root: root)

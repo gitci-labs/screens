@@ -18,6 +18,7 @@ struct GitCIScreensCommand: AsyncParsableCommand {
             Build.self,
             Export.self,
             Archive.self,
+            Fastlane.self,
             Gallery.self,
             Init.self,
             SceneSets.self,
@@ -365,6 +366,54 @@ struct Archive: ParsableCommand {
         process.waitUntilExit()
         guard process.terminationStatus == 0 else {
             throw ValidationError("Could not create zip archive at \(archiveURL.path). Ensure `zip` is installed.")
+        }
+    }
+}
+
+struct Fastlane: ParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "fastlane",
+        abstract: "Copy an existing scene-set build into a fastlane/screenshots layout."
+    )
+
+    @Argument(help: "Project path. Defaults to current directory.")
+    var path: String = "."
+
+    @Option(name: .long, help: "Scene set id.")
+    var sceneSet: String?
+
+    @Option(name: .long, help: "Fastlane screenshots output directory.")
+    var out: String?
+
+    @Option(name: .long, help: "Locale folder to use when the scene set has no locales.")
+    var defaultLocale: String = "en-US"
+
+    @Flag(name: .long, help: "Print JSON.")
+    var json = false
+
+    func run() throws {
+        let context = try BuildContext(path: path, sceneSet: sceneSet, out: nil).load()
+        let manifestURL = context.outputURL.appendingPathComponent("manifest.gitci-output.json")
+        guard FileManager.default.fileExists(atPath: manifestURL.path) else {
+            throw ValidationError("No build manifest found at \(manifestURL.path). Run `gitci-screens build` first.")
+        }
+
+        let projectURL = URL(fileURLWithPath: path).standardizedFileURL
+        let outputURL = URL(
+            fileURLWithPath: out ?? "fastlane/screenshots",
+            relativeTo: projectURL
+        ).standardizedFileURL
+        let exported = try FastlaneScreenshotsExporter(
+            buildOutputURL: context.outputURL,
+            outputURL: outputURL,
+            defaultLocale: defaultLocale
+        ).export()
+
+        if json {
+            let data = try JSONEncoder.gitci.encode(exported)
+            print(String(decoding: data, as: UTF8.self))
+        } else {
+            print(outputURL.path)
         }
     }
 }

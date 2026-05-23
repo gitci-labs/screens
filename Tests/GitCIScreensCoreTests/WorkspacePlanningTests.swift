@@ -308,6 +308,65 @@ final class WorkspacePlanningTests: XCTestCase {
         XCTAssertEqual(screenshot.clip, ClipRect(x: 0, y: 0, width: 1320, height: 2868))
     }
 
+    func testFastlaneExporterCopiesScreenshotsIntoLocaleFolders() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+        let buildURL = root.appendingPathComponent("build")
+        let targetDirectoryURL = buildURL
+            .appendingPathComponent("en-US")
+            .appendingPathComponent("appstore.iphone.6_9.portrait")
+        let fastlaneURL = root.appendingPathComponent("fastlane/screenshots")
+        try FileManager.default.createDirectory(at: targetDirectoryURL, withIntermediateDirectories: true)
+        defer {
+            try? FileManager.default.removeItem(at: root)
+        }
+
+        let sourceURL = targetDirectoryURL.appendingPathComponent("01-hero.png")
+        try Data("png".utf8).write(to: sourceURL)
+        let manifest = OutputManifest(
+            schemaVersion: 1,
+            buildId: "localized",
+            sceneSet: RenderPlanSceneSet(id: "launch", name: nil),
+            targets: [
+                OutputManifestTarget(
+                    id: "appstore.iphone.6_9.portrait",
+                    width: 1320,
+                    height: 2868,
+                    displayGapPx: 80,
+                    appearance: .light,
+                    screenshots: [
+                        OutputManifestScreenshot(
+                            locale: RenderPlanLocale(id: "en-US", name: "English"),
+                            slotId: "hero",
+                            variantId: "default",
+                            sceneTemplate: "gitci.core.hero-device",
+                            path: "en-US/appstore.iphone.6_9.portrait/01-hero.png",
+                            width: 1320,
+                            height: 2868,
+                            span: 1,
+                            spanIndex: 0,
+                            compositeWidth: 1320,
+                            compositeHeight: 2868,
+                            clip: ClipRect(x: 0, y: 0, width: 1320, height: 2868)
+                        )
+                    ]
+                )
+            ]
+        )
+        try JSONEncoder.gitci.encode(manifest)
+            .write(to: buildURL.appendingPathComponent("manifest.gitci-output.json"))
+
+        let exported = try FastlaneScreenshotsExporter(
+            buildOutputURL: buildURL,
+            outputURL: fastlaneURL
+        ).export()
+        let outputPath = try XCTUnwrap(exported.first?.outputPath)
+
+        XCTAssertEqual(exported.first?.localeId, "en-US")
+        XCTAssertTrue(outputPath.hasSuffix("fastlane/screenshots/en-US/01-appstore-iphone-6_9-portrait-hero-default.png"))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: outputPath))
+    }
+
     func testSpecificAppearancePatternWinsOverBroadPattern() throws {
         let root = try exampleRoot()
         let workspace = try ScreensWorkspace.load(root: root)

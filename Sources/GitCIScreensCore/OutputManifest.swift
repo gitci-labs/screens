@@ -6,6 +6,18 @@ public struct OutputManifest: Codable, Equatable, Sendable {
     public var sceneSet: RenderPlanSceneSet
     public var targets: [OutputManifestTarget]
 
+    public init(
+        schemaVersion: Int,
+        buildId: String,
+        sceneSet: RenderPlanSceneSet,
+        targets: [OutputManifestTarget]
+    ) {
+        self.schemaVersion = schemaVersion
+        self.buildId = buildId
+        self.sceneSet = sceneSet
+        self.targets = targets
+    }
+
     public init(plan: RenderPlan) {
         self.schemaVersion = 1
         self.buildId = plan.buildId

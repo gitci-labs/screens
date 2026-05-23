@@ -65,6 +65,14 @@ The zip archive at `gitci/screens/build/launch.zip` is suitable for CI artifacts
 
 If the scene set declares `locales`, export repeats the selected slots for each locale and writes files under `gitci/screens/build/launch/<locale>/<target>/...`. Keep localized marketing copy in the scene-set manifest with `{ "kind": "localized", "key": "...", "fallback": "..." }` props so the renderer still receives plain strings.
 
+To hand the built screenshots to an existing Fastlane pipeline:
+
+```sh
+gitci-screens fastlane . --scene-set launch --out fastlane/screenshots
+```
+
+This copies generated PNGs into locale folders like `fastlane/screenshots/en-US/`. Fastlane `deliver` can then infer device families from image dimensions and preserve ordering from the generated filenames.
+
 When iterating on one step, the underlying commands are still available:
 
 ```sh

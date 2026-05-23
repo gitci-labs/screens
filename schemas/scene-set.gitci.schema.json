@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://screens.gitci.com/schemas/scene-set.gitci.schema.json",
+  "title": "GitCI Screens Scene Set",
+  "type": "object",
+  "required": ["schemaVersion", "id", "targets", "slots"],
+  "additionalProperties": true,
+  "$defs": {
+    "appearance": {
+      "type": "string",
+      "enum": ["light", "dark", "automatic"]
+    },
+    "assetRef": {
+      "type": "object",
+      "required": ["kind"],
+      "properties": {
+        "kind": { "type": "string", "enum": ["asset", "data", "generated"] },
+        "path": { "type": "string" },
+        "resolvedURL": { "type": "string" },
+        "alt": { "type": "string" },
+        "mediaType": { "type": "string" },
+        "base64": { "type": "string" },
+        "id": { "type": "string" }
+      }
+    }
+  },
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "id": { "type": "string", "minLength": 1 },
+    "name": { "type": "string" },
+    "targets": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "appearanceByTarget": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/appearance" }
+    },
+    "theme": {
+      "type": "object",
+      "required": ["id"],
+      "properties": {
+        "id": { "type": "string" },
+        "palette": { "type": "string" },
+        "paletteMap": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        },
+        "overrides": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        }
+      }
+    },
+    "slots": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "variants"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "label": { "type": "string" },
+          "selectedVariant": { "type": "string" },
+          "variants": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["id", "sceneTemplate", "props"],
+              "properties": {
+                "id": { "type": "string", "minLength": 1 },
+                "sceneTemplate": { "type": "string", "minLength": 1 },
+                "includeTargets": { "type": "array", "items": { "type": "string" } },
+                "excludeTargets": { "type": "array", "items": { "type": "string" } },
+                "props": { "type": "object" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

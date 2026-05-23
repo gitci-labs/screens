@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://screens.gitci.com/schemas/pack.gitci.schema.json",
+  "title": "GitCI Screens Pack",
+  "type": "object",
+  "required": ["schemaVersion", "id", "name"],
+  "additionalProperties": true,
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "id": { "type": "string", "minLength": 1 },
+    "name": { "type": "string", "minLength": 1 },
+    "summary": { "type": "string" },
+    "descriptionMarkdown": { "type": "string" },
+    "version": { "type": "string" },
+    "license": { "type": "string" },
+    "tags": { "type": "array", "items": { "type": "string" } },
+    "author": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" }
+      }
+    }
+  }
+}

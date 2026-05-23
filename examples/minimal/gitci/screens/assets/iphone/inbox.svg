@@ -1,0 +1,31 @@
+<svg width="1170" height="2532" viewBox="0 0 1170 2532" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1170" height="2532" rx="92" fill="#F8FAFC"/>
+  <rect x="70" y="106" width="1030" height="2320" rx="74" fill="#FFFFFF"/>
+  <text x="118" y="226" fill="#0F172A" font-family="Arial, Helvetica, sans-serif" font-size="62" font-weight="800">Today</text>
+  <text x="118" y="300" fill="#64748B" font-family="Arial, Helvetica, sans-serif" font-size="34">6 focused tasks</text>
+  <rect x="118" y="382" width="934" height="248" rx="38" fill="#EFF6FF"/>
+  <rect x="166" y="440" width="72" height="72" rx="24" fill="#2563EB"/>
+  <text x="274" y="486" fill="#0F172A" font-family="Arial, Helvetica, sans-serif" font-size="38" font-weight="700">Design review</text>
+  <text x="274" y="548" fill="#64748B" font-family="Arial, Helvetica, sans-serif" font-size="30">Finalize launch screens</text>
+  <rect x="118" y="678" width="934" height="248" rx="38" fill="#F0FDFA"/>
+  <rect x="166" y="736" width="72" height="72" rx="24" fill="#14B8A6"/>
+  <text x="274" y="782" fill="#0F172A" font-family="Arial, Helvetica, sans-serif" font-size="38" font-weight="700">Write release notes</text>
+  <text x="274" y="844" fill="#64748B" font-family="Arial, Helvetica, sans-serif" font-size="30">Keep the first screenshots sharp</text>
+  <rect x="118" y="974" width="934" height="248" rx="38" fill="#FFF7ED"/>
+  <rect x="166" y="1032" width="72" height="72" rx="24" fill="#F97316"/>
+  <text x="274" y="1078" fill="#0F172A" font-family="Arial, Helvetica, sans-serif" font-size="38" font-weight="700">Capture iPad flows</text>
+  <text x="274" y="1140" fill="#64748B" font-family="Arial, Helvetica, sans-serif" font-size="30">Prepare responsive variants</text>
+  <rect x="118" y="1320" width="934" height="660" rx="46" fill="#0F172A"/>
+  <text x="174" y="1420" fill="#E2E8F0" font-family="Arial, Helvetica, sans-serif" font-size="32" font-weight="700">Progress</text>
+  <rect x="174" y="1508" width="822" height="28" rx="14" fill="#334155"/>
+  <rect x="174" y="1508" width="548" height="28" rx="14" fill="#38BDF8"/>
+  <rect x="174" y="1608" width="330" height="180" rx="34" fill="#1E293B"/>
+  <text x="216" y="1682" fill="#F8FAFC" font-family="Arial, Helvetica, sans-serif" font-size="56" font-weight="800">12</text>
+  <text x="216" y="1738" fill="#CBD5E1" font-family="Arial, Helvetica, sans-serif" font-size="28">screens planned</text>
+  <rect x="538" y="1608" width="458" height="180" rx="34" fill="#1E293B"/>
+  <text x="580" y="1682" fill="#F8FAFC" font-family="Arial, Helvetica, sans-serif" font-size="56" font-weight="800">3</text>
+  <text x="580" y="1738" fill="#CBD5E1" font-family="Arial, Helvetica, sans-serif" font-size="28">targets selected</text>
+  <rect x="118" y="2090" width="934" height="214" rx="38" fill="#F1F5F9"/>
+  <text x="166" y="2180" fill="#0F172A" font-family="Arial, Helvetica, sans-serif" font-size="38" font-weight="700">Ready for CI</text>
+  <text x="166" y="2240" fill="#64748B" font-family="Arial, Helvetica, sans-serif" font-size="30">Deterministic output, checked in config.</text>
+</svg>

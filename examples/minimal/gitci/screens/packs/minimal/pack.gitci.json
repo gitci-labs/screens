@@ -1,0 +1,13 @@
+{
+  "$schema": "https://screens.gitci.com/schemas/pack.gitci.schema.json",
+  "schemaVersion": 1,
+  "id": "example.minimal",
+  "name": "Minimal Example Pack",
+  "summary": "Project-local templates that prove app repos can bring their own scenes.",
+  "version": "0.1.0",
+  "author": {
+    "name": "GitCI"
+  },
+  "license": "MIT",
+  "tags": ["example", "local"]
+}

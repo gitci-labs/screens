@@ -1,0 +1,31 @@
+{
+  "$schema": "https://screens.gitci.com/schemas/theme.gitci.schema.json",
+  "schemaVersion": 1,
+  "id": "gitci.theme.clean-editorial",
+  "name": "Clean Editorial",
+  "pack": "gitci.core",
+  "vars": {
+    "light": {
+      "--gitci-color-bg": "#f8fafc",
+      "--gitci-color-fg": "#111827",
+      "--gitci-color-muted": "#64748b",
+      "--gitci-color-primary": "#2563eb",
+      "--gitci-color-secondary": "#0f766e",
+      "--gitci-font-title": "ui-rounded, system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
+      "--gitci-font-headline": "system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
+      "--gitci-font-body": "system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
+      "--gitci-radius-card": "36px"
+    },
+    "dark": {
+      "--gitci-color-bg": "#0f172a",
+      "--gitci-color-fg": "#f8fafc",
+      "--gitci-color-muted": "#cbd5e1",
+      "--gitci-color-primary": "#60a5fa",
+      "--gitci-color-secondary": "#5eead4",
+      "--gitci-font-title": "ui-rounded, system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
+      "--gitci-font-headline": "system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
+      "--gitci-font-body": "system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
+      "--gitci-radius-card": "36px"
+    }
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "$schema": "https://screens.gitci.com/schemas/targets.gitci.schema.json",
+  "schemaVersion": 1,
+  "targets": [
+    {
+      "id": "appstore.iphone.6_9.portrait",
+      "platform": "ios",
+      "family": "iphone",
+      "displayName": "iPhone 6.9-inch Portrait",
+      "width": 1320,
+      "height": 2868,
+      "acceptedSizes": [[1260, 2736], [1290, 2796], [1320, 2868]],
+      "orientation": "portrait",
+      "required": true,
+      "maxScreenshots": 10,
+      "displayGapPx": 80,
+      "displayGapSource": "empirical"
+    },
+    {
+      "id": "appstore.ipad.13.portrait",
+      "platform": "ios",
+      "family": "ipad",
+      "displayName": "iPad 13-inch Portrait",
+      "width": 2064,
+      "height": 2752,
+      "acceptedSizes": [[2064, 2752], [2048, 2732]],
+      "orientation": "portrait",
+      "required": true,
+      "maxScreenshots": 10,
+      "displayGapPx": 96,
+      "displayGapSource": "empirical"
+    },
+    {
+      "id": "appstore.mac.16_10",
+      "platform": "macos",
+      "family": "mac",
+      "displayName": "Mac 16:10",
+      "width": 2880,
+      "height": 1800,
+      "acceptedSizes": [[1280, 800], [1440, 900], [2560, 1600], [2880, 1800]],
+      "orientation": "landscape",
+      "required": true,
+      "maxScreenshots": 10,
+      "displayGapPx": 96,
+      "displayGapSource": "empirical"
+    }
+  ]
+}

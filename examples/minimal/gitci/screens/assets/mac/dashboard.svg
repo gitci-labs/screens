@@ -1,0 +1,36 @@
+<svg width="2880" height="1800" viewBox="0 0 2880 1800" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="2880" height="1800" rx="36" fill="#F8FAFC"/>
+  <rect x="96" y="96" width="2688" height="1608" rx="32" fill="#FFFFFF"/>
+  <rect x="96" y="96" width="320" height="1608" rx="32" fill="#0F172A"/>
+  <text x="154" y="194" fill="#F8FAFC" font-family="Arial, Helvetica, sans-serif" font-size="42" font-weight="800">Screens</text>
+  <rect x="154" y="286" width="204" height="56" rx="18" fill="#2563EB"/>
+  <rect x="154" y="384" width="204" height="56" rx="18" fill="#1E293B"/>
+  <rect x="154" y="482" width="204" height="56" rx="18" fill="#1E293B"/>
+  <text x="488" y="220" fill="#0F172A" font-family="Arial, Helvetica, sans-serif" font-size="64" font-weight="800">Build run</text>
+  <text x="488" y="286" fill="#64748B" font-family="Arial, Helvetica, sans-serif" font-size="30">Launch Screens generated for all selected targets.</text>
+  <rect x="488" y="382" width="664" height="320" rx="32" fill="#EFF6FF"/>
+  <rect x="1212" y="382" width="664" height="320" rx="32" fill="#F0FDFA"/>
+  <rect x="1936" y="382" width="664" height="320" rx="32" fill="#FFF7ED"/>
+  <text x="548" y="492" fill="#1D4ED8" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="800">Render plan</text>
+  <text x="1272" y="492" fill="#0F766E" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="800">Playwright</text>
+  <text x="1996" y="492" fill="#C2410C" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="800">Outputs</text>
+  <text x="548" y="586" fill="#0F172A" font-family="Arial, Helvetica, sans-serif" font-size="76" font-weight="800">3</text>
+  <text x="1272" y="586" fill="#0F172A" font-family="Arial, Helvetica, sans-serif" font-size="76" font-weight="800">1x</text>
+  <text x="1996" y="586" fill="#0F172A" font-family="Arial, Helvetica, sans-serif" font-size="76" font-weight="800">PNG</text>
+  <rect x="488" y="808" width="2112" height="650" rx="34" fill="#F1F5F9"/>
+  <rect x="560" y="900" width="1968" height="48" rx="24" fill="#CBD5E1"/>
+  <rect x="560" y="900" width="1350" height="48" rx="24" fill="#2563EB"/>
+  <g fill="#FFFFFF">
+    <rect x="560" y="1050" width="560" height="250" rx="30"/>
+    <rect x="1280" y="1050" width="560" height="250" rx="30"/>
+    <rect x="2000" y="1050" width="420" height="250" rx="30"/>
+  </g>
+  <g font-family="Arial, Helvetica, sans-serif" fill="#0F172A">
+    <text x="620" y="1160" font-size="38" font-weight="800">iPhone</text>
+    <text x="1340" y="1160" font-size="38" font-weight="800">iPad</text>
+    <text x="2060" y="1160" font-size="38" font-weight="800">Mac</text>
+    <text x="620" y="1230" font-size="28">1320 x 2868</text>
+    <text x="1340" y="1230" font-size="28">2064 x 2752</text>
+    <text x="2060" y="1230" font-size="28">2880 x 1800</text>
+  </g>
+</svg>

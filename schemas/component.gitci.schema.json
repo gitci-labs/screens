@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://screens.gitci.com/schemas/component.gitci.schema.json",
+  "title": "GitCI Screens Component",
+  "type": "object",
+  "required": ["schemaVersion", "id", "name", "entry", "export"],
+  "additionalProperties": true,
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "id": { "type": "string", "minLength": 1 },
+    "name": { "type": "string", "minLength": 1 },
+    "pack": { "type": "string" },
+    "entry": { "type": "string" },
+    "export": { "type": "string" },
+    "category": { "type": "string" },
+    "tags": { "type": "array", "items": { "type": "string" } },
+    "propsSchema": { "type": "object" },
+    "previewProps": { "type": "object" }
+  }
+}

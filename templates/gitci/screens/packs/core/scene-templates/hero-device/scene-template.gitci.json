@@ -1,0 +1,37 @@
+{
+  "$schema": "https://screens.gitci.com/schemas/scene-template.gitci.schema.json",
+  "schemaVersion": 1,
+  "id": "gitci.core.hero-device",
+  "name": "Hero Device",
+  "pack": "gitci.core",
+  "entry": "@gitci/screens-templates-core",
+  "export": "HeroDeviceScene",
+  "tags": ["hero", "device", "headline"],
+  "minAspectRatio": 0.42,
+  "supportedTargets": ["appstore.iphone.*", "appstore.ipad.*", "appstore.mac.*"],
+  "propsSchema": {
+    "type": "object",
+    "required": ["headline", "screenshot"],
+    "properties": {
+      "headline": { "type": "string", "title": "Headline" },
+      "subheadline": { "type": "string", "title": "Subheadline" },
+      "screenshot": { "$ref": "#/$defs/assetRef" },
+      "device": {
+        "type": "string",
+        "enum": ["iphone-2d", "ipad-2d", "mac-2d", "iphone-3d"],
+        "default": "iphone-2d"
+      },
+      "devicePose": {
+        "type": "string",
+        "enum": ["front", "tilt-left", "tilt-right", "floating"],
+        "default": "front"
+      }
+    }
+  },
+  "previewProps": {
+    "headline": "Ship polished App Store screens",
+    "subheadline": "Compose screenshots, copy, themes, and responsive scenes.",
+    "screenshot": { "kind": "asset", "path": "./preview-assets/iphone.svg" },
+    "device": "iphone-2d"
+  }
+}

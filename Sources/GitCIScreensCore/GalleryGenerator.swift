@@ -1,0 +1,159 @@
+import Foundation
+
+public struct GalleryGenerator: Sendable {
+    public var workspace: ScreensWorkspace
+
+    public init(workspace: ScreensWorkspace) {
+        self.workspace = workspace
+    }
+
+    public func generate(outputURL: URL, buildOutputURL: URL? = nil) throws {
+        let dataURL = outputURL.appendingPathComponent("data")
+        try FileManager.default.createDirectory(at: dataURL, withIntermediateDirectories: true)
+
+        let sceneSets = workspace.sceneSets.map {
+            GallerySceneSet(id: $0.id, name: $0.manifest.name, slots: $0.manifest.slots.map(\.id))
+        }
+        try JSONEncoder.gitci.encode(sceneSets).write(to: dataURL.appendingPathComponent("scene-sets.json"))
+        try JSONEncoder.gitci.encode(workspace.targets.values.sorted { $0.id < $1.id })
+            .write(to: dataURL.appendingPathComponent("targets.json"))
+        try JSONEncoder.gitci.encode(workspace.sceneTemplates.values.sorted { $0.id < $1.id })
+            .write(to: dataURL.appendingPathComponent("scene-templates.json"))
+        try JSONEncoder.gitci.encode(workspace.packs)
+            .write(to: dataURL.appendingPathComponent("packs.json"))
+        try JSONEncoder.gitci.encode(workspace.components.values.sorted { $0.id < $1.id })
+            .write(to: dataURL.appendingPathComponent("components.json"))
+        try JSONEncoder.gitci.encode(workspace.palettes.values.sorted { $0.id < $1.id })
+            .write(to: dataURL.appendingPathComponent("palettes.json"))
+        try JSONEncoder.gitci.encode(workspace.themes.values.sorted { $0.id < $1.id })
+            .write(to: dataURL.appendingPathComponent("themes.json"))
+
+        let builtOutputs = try loadBuiltOutputs(buildOutputURL: buildOutputURL)
+        try JSONEncoder.gitci.encode(builtOutputs)
+            .write(to: dataURL.appendingPathComponent("built-outputs.json"))
+
+        try Self.html(sceneSets: sceneSets, builtOutputs: builtOutputs)
+            .write(to: outputURL.appendingPathComponent("index.html"), atomically: true, encoding: .utf8)
+    }
+
+    private func loadBuiltOutputs(buildOutputURL: URL?) throws -> [GalleryBuiltOutput] {
+        guard let buildOutputURL else {
+            return []
+        }
+        let manifestURL = buildOutputURL.appendingPathComponent("manifest.gitci-output.json")
+        guard FileManager.default.fileExists(atPath: manifestURL.path) else {
+            return []
+        }
+        let manifest = try JSONDecoder.gitci.decode(OutputManifest.self, from: Data(contentsOf: manifestURL))
+        return manifest.targets.flatMap { target in
+            target.screenshots.map { screenshot in
+                GalleryBuiltOutput(
+                    targetId: target.id,
+                    path: screenshot.path,
+                    width: screenshot.width,
+                    height: screenshot.height
+                )
+            }
+        }
+    }
+
+    private static func html(sceneSets: [GallerySceneSet], builtOutputs: [GalleryBuiltOutput]) -> String {
+        let sceneSetItems = sceneSets.map {
+            "<li><strong>\(escape($0.id))</strong>\($0.name.map { " — \(escape($0))" } ?? "")</li>"
+        }.joined(separator: "\n")
+        let groupedOutputs = Dictionary(grouping: builtOutputs, by: \.targetId)
+            .sorted { $0.key < $1.key }
+            .map { targetId, outputs in
+                let cards = outputs.map { output in
+                    """
+                    <a class="shot" href="../\(escapeAttribute(output.path))">
+                      <img src="../\(escapeAttribute(output.path))" alt="\(escapeAttribute(output.path))">
+                      <span>\(escape(output.path))</span>
+                      <small>\(String(output.width))x\(String(output.height))</small>
+                    </a>
+                    """
+                }.joined(separator: "\n")
+                return """
+                <section class="target">
+                  <h3>\(escape(targetId))</h3>
+                  <div class="strip">\(cards)</div>
+                </section>
+                """
+            }
+            .joined(separator: "\n")
+
+        return """
+        <!doctype html>
+        <html lang="en">
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <title>GitCI Screens Gallery</title>
+          <style>
+            body { margin: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif; color: #111827; background: #f8fafc; }
+            main { max-width: 1120px; margin: 0 auto; padding: 56px 28px; }
+            h1 { margin: 0 0 8px; font-size: 44px; line-height: 1; letter-spacing: 0; }
+            h2 { margin-top: 42px; font-size: 24px; }
+            h3 { margin: 24px 0 12px; font-size: 18px; }
+            ul { padding-left: 20px; line-height: 1.7; }
+            code { background: #e2e8f0; padding: 2px 6px; border-radius: 6px; }
+            a { color: #2563eb; }
+            .target { margin-top: 20px; }
+            .strip { display: flex; gap: 28px; overflow-x: auto; padding: 6px 0 22px; }
+            .shot { flex: 0 0 220px; color: inherit; text-decoration: none; }
+            .shot img { display: block; width: 220px; height: 320px; object-fit: contain; object-position: top center; border-radius: 8px; background: #e2e8f0; box-shadow: 0 18px 44px rgb(15 23 42 / 0.16); }
+            .shot span { display: block; margin-top: 10px; font-size: 13px; overflow-wrap: anywhere; }
+            .shot small { display: block; margin-top: 4px; color: #64748b; }
+          </style>
+        </head>
+        <body>
+          <main>
+            <h1>GitCI Screens Gallery</h1>
+            <p>Static index for discovered scene sets and generated outputs.</p>
+            <h2>Scene Sets</h2>
+            <ul>
+              \(sceneSetItems)
+            </ul>
+            <h2>Built Outputs</h2>
+            \(groupedOutputs.isEmpty ? "<p>No built output manifest found.</p>" : groupedOutputs)
+            <h2>Data</h2>
+            <ul>
+              <li><a href="data/scene-sets.json">scene-sets.json</a></li>
+              <li><a href="data/packs.json">packs.json</a></li>
+              <li><a href="data/scene-templates.json">scene-templates.json</a></li>
+              <li><a href="data/components.json">components.json</a></li>
+              <li><a href="data/palettes.json">palettes.json</a></li>
+              <li><a href="data/themes.json">themes.json</a></li>
+              <li><a href="data/targets.json">targets.json</a></li>
+              <li><a href="data/built-outputs.json">built-outputs.json</a></li>
+            </ul>
+          </main>
+        </body>
+        </html>
+        """
+    }
+
+    private static func escape(_ value: String) -> String {
+        value
+            .replacingOccurrences(of: "&", with: "&amp;")
+            .replacingOccurrences(of: "<", with: "&lt;")
+            .replacingOccurrences(of: ">", with: "&gt;")
+    }
+
+    private static func escapeAttribute(_ value: String) -> String {
+        escape(value).replacingOccurrences(of: "\"", with: "&quot;")
+    }
+}
+
+public struct GallerySceneSet: Codable, Equatable, Sendable {
+    public var id: String
+    public var name: String?
+    public var slots: [String]
+}
+
+public struct GalleryBuiltOutput: Codable, Equatable, Sendable {
+    public var targetId: String
+    public var path: String
+    public var width: Int
+    public var height: Int
+}

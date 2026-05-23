@@ -1,0 +1,87 @@
+# Schema
+
+Phase 1 uses versioned JSON manifests that Swift can parse without executing React or TypeScript.
+
+## Project
+
+`project.gitci.json` declares the project identity, default scene set, and asset policy.
+
+```json
+{
+  "schemaVersion": 1,
+  "id": "com.example.todo.gitci-screens",
+  "name": "Todo App Screens",
+  "defaultSceneSet": "launch",
+  "assetPolicy": {
+    "allowRemoteAssets": false
+  }
+}
+```
+
+## Scene Set
+
+`scene-sets/<id>/scene-set.gitci.json` declares targets, appearance, theme, slots, variants, and props.
+
+Target-aware variants are selected by `includeTargets` and `excludeTargets`. If `selectedVariant` is omitted, the planner picks the first variant matching the current target.
+
+Asset references are resolved relative to the scene set directory:
+
+```json
+{
+  "kind": "asset",
+  "path": "../../assets/iphone/inbox.png"
+}
+```
+
+Remote assets are rejected unless `assetPolicy.allowRemoteAssets` is true.
+
+Themes can also map named CSS vars to reusable palette stops. Stops are normalized from `0` to `1`, so differently sized palettes still map predictably:
+
+```json
+{
+  "theme": {
+    "id": "gitci.theme.clean-editorial",
+    "palette": "gitci.palette.gitci-blue",
+    "paletteMap": {
+      "--gitci-color-bg": 0,
+      "--gitci-color-primary": 0.5,
+      "--gitci-color-secondary": 0.75,
+      "--gitci-color-fg": 1
+    },
+    "overrides": {
+      "--gitci-color-secondary": "#14b8a6"
+    }
+  }
+}
+```
+
+Resolution order is base theme vars, then palette-mapped vars, then explicit overrides.
+
+## Template Packs
+
+Template packs live under `gitci/screens/packs/<pack-id>` or in an installed templates root such as `templates/gitci/screens/packs/<pack-id>`.
+
+Supported manifest filenames:
+
+- `pack.gitci.json`
+- `scene-template.gitci.json`
+- `component.gitci.json`
+- `theme.gitci.json`
+- `palette.gitci.json`
+- target collections such as `appstore.gitci.json`
+
+The manifests use JSON Schema Draft 2020-12 style `propsSchema` objects. Swift reads enough of `propsSchema.required` to catch missing required props before handing work to the renderer.
+
+Scene template manifests must include renderable module metadata:
+
+```json
+{
+  "schemaVersion": 1,
+  "id": "example.minimal.split-proof",
+  "name": "Split Proof",
+  "entry": "./template.tsx",
+  "export": "SplitProofScene"
+}
+```
+
+Package entries such as `@gitci/screens-templates-core` are passed through. Relative entries are resolved from the manifest directory and written into the render plan so the Node renderer can generate a Vite registry without rediscovering files.

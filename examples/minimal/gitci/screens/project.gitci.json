@@ -1,0 +1,10 @@
+{
+  "$schema": "https://screens.gitci.com/schemas/project.gitci.schema.json",
+  "schemaVersion": 1,
+  "id": "com.gitci.examples.minimal",
+  "name": "Minimal GitCI Screens Example",
+  "defaultSceneSet": "launch",
+  "assetPolicy": {
+    "allowRemoteAssets": false
+  }
+}

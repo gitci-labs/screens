@@ -1,0 +1,29 @@
+[tools]
+swift = "6.2"
+node = "22"
+pnpm = "latest"
+
+[tasks.build]
+run = [
+  "swift build",
+  "cd js && pnpm install && pnpm build"
+]
+
+[tasks.test]
+run = [
+  "swift test",
+  "cd js && pnpm test"
+]
+
+[tasks.render-demo]
+run = [
+  "swift build",
+  ".build/debug/gitci-screens build examples/minimal",
+  ".build/debug/gitci-screens gallery examples/minimal"
+]
+
+[tasks.docker-build]
+run = "docker build -f docker/Dockerfile -t ghcr.io/gitci-labs/screens:local ."
+
+[tasks.docker-run-demo]
+run = "docker run --rm -v \"$PWD\":/workspace ghcr.io/gitci-labs/screens:local build /workspace/examples/minimal"

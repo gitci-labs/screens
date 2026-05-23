@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://screens.gitci.com/schemas/theme.gitci.schema.json",
+  "title": "GitCI Screens Theme",
+  "type": "object",
+  "required": ["schemaVersion", "id", "name", "vars"],
+  "additionalProperties": true,
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "id": { "type": "string" },
+    "name": { "type": "string" },
+    "pack": { "type": "string" },
+    "vars": {
+      "type": "object",
+      "required": ["light", "dark"],
+      "properties": {
+        "light": { "type": "object", "additionalProperties": { "type": "string" } },
+        "dark": { "type": "object", "additionalProperties": { "type": "string" } }
+      }
+    }
+  }
+}

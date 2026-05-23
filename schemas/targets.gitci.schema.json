@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://screens.gitci.com/schemas/targets.gitci.schema.json",
+  "title": "GitCI Screens Targets",
+  "type": "object",
+  "required": ["schemaVersion", "targets"],
+  "additionalProperties": true,
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "targets": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "width", "height", "maxScreenshots", "displayGapPx"],
+        "properties": {
+          "id": { "type": "string" },
+          "platform": { "type": "string" },
+          "family": { "type": "string" },
+          "displayName": { "type": "string" },
+          "width": { "type": "integer", "minimum": 1 },
+          "height": { "type": "integer", "minimum": 1 },
+          "acceptedSizes": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "prefixItems": [
+                { "type": "integer", "minimum": 1 },
+                { "type": "integer", "minimum": 1 }
+              ],
+              "items": false
+            }
+          },
+          "orientation": { "type": "string", "enum": ["portrait", "landscape"] },
+          "required": { "type": "boolean" },
+          "displayGapPx": { "type": "integer", "minimum": 0 },
+          "displayGapSource": { "type": "string" },
+          "maxScreenshots": { "type": "integer", "minimum": 1, "maximum": 10 }
+        }
+      }
+    }
+  }
+}

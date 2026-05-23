@@ -1,0 +1,14 @@
+{
+  "$schema": "https://screens.gitci.com/schemas/pack.gitci.schema.json",
+  "schemaVersion": 1,
+  "id": "gitci.core",
+  "name": "GitCI Core Templates",
+  "summary": "Foundational App Store screenshot templates, device frames, themes, palettes, and targets.",
+  "descriptionMarkdown": "README.md",
+  "version": "0.1.0",
+  "author": {
+    "name": "GitCI"
+  },
+  "license": "MIT",
+  "tags": ["core", "app-store", "device-frames"]
+}

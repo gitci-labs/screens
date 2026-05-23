@@ -1,0 +1,24 @@
+{
+  "$schema": "https://screens.gitci.com/schemas/component.gitci.schema.json",
+  "schemaVersion": 1,
+  "id": "gitci.core.device-frame-3d",
+  "name": "Device Frame 3D",
+  "pack": "gitci.core",
+  "entry": "@gitci/screens-templates-core/experimental",
+  "export": "DeviceFrame3D",
+  "category": "device-frames",
+  "tags": ["device", "frame", "3d", "experimental"],
+  "propsSchema": {
+    "type": "object",
+    "required": ["modelURL", "screenshot", "width", "height"],
+    "properties": {
+      "modelURL": { "type": "string" },
+      "width": { "type": "number" },
+      "height": { "type": "number" },
+      "pose": { "type": "string", "enum": ["front", "tilt-left", "tilt-right"] }
+    }
+  },
+  "previewProps": {
+    "pose": "front"
+  }
+}

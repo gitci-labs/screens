@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://screens.gitci.com/schemas/project.gitci.schema.json",
+  "title": "GitCI Screens Project",
+  "type": "object",
+  "required": ["schemaVersion", "id", "name"],
+  "additionalProperties": true,
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "id": { "type": "string", "minLength": 1 },
+    "name": { "type": "string", "minLength": 1 },
+    "defaultSceneSet": { "type": "string" },
+    "assetPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "allowRemoteAssets": { "type": "boolean", "default": false }
+      }
+    }
+  }
+}

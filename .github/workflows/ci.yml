@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  swift:
+    runs-on: ubuntu-latest
+    container: swift:6.2-jammy
+    steps:
+      - uses: actions/checkout@v4
+      - run: swift test
+
+  js:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: js
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: js/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm test
+
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: js/pnpm-lock.yaml
+      - run: cd js && pnpm install --frozen-lockfile
+      - run: cd js && pnpm build
+      - run: cd js && pnpm --filter @gitci/screens-renderer-node exec playwright install --with-deps chromium
+      - run: swift build
+      - run: .build/debug/gitci-screens validate examples/minimal
+      - run: .build/debug/gitci-screens build examples/minimal
+      - run: .build/debug/gitci-screens gallery examples/minimal
+      - run: test -f examples/minimal/gitci/screens/build/launch/appstore.iphone.6_9.portrait/01-hero.png
+      - run: test -f examples/minimal/gitci/screens/build/launch/appstore.iphone.6_9.portrait/02-workflow.png
+      - run: test -f examples/minimal/gitci/screens/build/launch/appstore.iphone.6_9.portrait/03-span-1.png
+      - run: test -f examples/minimal/gitci/screens/build/launch/appstore.iphone.6_9.portrait/04-span-2.png
+      - run: test -f examples/minimal/gitci/screens/build/launch/appstore.ipad.13.portrait/01-hero.png
+      - run: test -f examples/minimal/gitci/screens/build/launch/appstore.ipad.13.portrait/02-workflow.png
+      - run: test -f examples/minimal/gitci/screens/build/launch/appstore.ipad.13.portrait/03-span-1.png
+      - run: test -f examples/minimal/gitci/screens/build/launch/appstore.ipad.13.portrait/04-span-2.png
+      - run: test -f examples/minimal/gitci/screens/build/launch/appstore.mac.16_10/01-hero.png
+      - run: test -f examples/minimal/gitci/screens/build/launch/appstore.mac.16_10/02-workflow.png
+      - run: test -f examples/minimal/gitci/screens/build/launch/appstore.mac.16_10/03-span.png
+      - run: test -f examples/minimal/gitci/screens/build/launch/manifest.gitci-output.json
+      - run: test -f examples/minimal/gitci/screens/build/launch/gallery/index.html
+      - run: test -f examples/minimal/gitci/screens/build/launch/gallery/data/packs.json
+      - run: test -f examples/minimal/gitci/screens/build/launch/gallery/data/components.json
+      - run: test -f examples/minimal/gitci/screens/build/launch/gallery/data/themes.json
+      - run: test -f examples/minimal/gitci/screens/build/launch/gallery/data/palettes.json

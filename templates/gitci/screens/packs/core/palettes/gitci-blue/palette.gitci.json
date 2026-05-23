@@ -1,0 +1,10 @@
+{
+  "$schema": "https://screens.gitci.com/schemas/palette.gitci.schema.json",
+  "schemaVersion": 1,
+  "id": "gitci.palette.gitci-blue",
+  "name": "GitCI Blue",
+  "colors": {
+    "light": ["#f8fafc", "#dbeafe", "#2563eb", "#0f766e", "#111827"],
+    "dark": ["#f8fafc", "#93c5fd", "#60a5fa", "#5eead4", "#0f172a"]
+  }
+}

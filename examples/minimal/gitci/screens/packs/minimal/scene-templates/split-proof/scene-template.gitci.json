@@ -1,0 +1,26 @@
+{
+  "$schema": "https://screens.gitci.com/schemas/scene-template.gitci.schema.json",
+  "schemaVersion": 1,
+  "id": "example.minimal.split-proof",
+  "name": "Split Proof",
+  "pack": "example.minimal",
+  "entry": "./template.tsx",
+  "export": "SplitProofScene",
+  "tags": ["example", "local", "wide"],
+  "minAspectRatio": 0.94,
+  "supportedTargets": ["appstore.iphone.*", "appstore.ipad.*", "appstore.mac.*"],
+  "propsSchema": {
+    "type": "object",
+    "required": ["headline", "screenshot"],
+    "properties": {
+      "headline": { "type": "string", "title": "Headline" },
+      "subheadline": { "type": "string", "title": "Subheadline" },
+      "screenshot": { "$ref": "#/$defs/assetRef" }
+    }
+  },
+  "previewProps": {
+    "headline": "Wide scenes can span upload slots",
+    "subheadline": "GitCI Screens renders one responsive scene, then cuts valid App Store screenshots.",
+    "screenshot": { "kind": "asset", "path": "../../../../assets/iphone/inbox.svg" }
+  }
+}

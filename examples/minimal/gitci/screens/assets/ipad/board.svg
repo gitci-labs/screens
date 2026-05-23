@@ -1,0 +1,36 @@
+<svg width="2048" height="2732" viewBox="0 0 2048 2732" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="2048" height="2732" rx="92" fill="#F8FAFC"/>
+  <rect x="112" y="118" width="1824" height="2496" rx="64" fill="#FFFFFF"/>
+  <text x="176" y="250" fill="#0F172A" font-family="Arial, Helvetica, sans-serif" font-size="72" font-weight="800">Launch Board</text>
+  <text x="176" y="326" fill="#64748B" font-family="Arial, Helvetica, sans-serif" font-size="34">Plan, render, review, upload.</text>
+  <rect x="176" y="430" width="516" height="1900" rx="42" fill="#EFF6FF"/>
+  <rect x="766" y="430" width="516" height="1900" rx="42" fill="#F0FDFA"/>
+  <rect x="1356" y="430" width="516" height="1900" rx="42" fill="#FFF7ED"/>
+  <text x="230" y="536" fill="#1D4ED8" font-family="Arial, Helvetica, sans-serif" font-size="36" font-weight="800">Scenes</text>
+  <text x="820" y="536" fill="#0F766E" font-family="Arial, Helvetica, sans-serif" font-size="36" font-weight="800">Targets</text>
+  <text x="1410" y="536" fill="#C2410C" font-family="Arial, Helvetica, sans-serif" font-size="36" font-weight="800">Outputs</text>
+  <g fill="#FFFFFF">
+    <rect x="230" y="650" width="408" height="220" rx="32"/>
+    <rect x="230" y="920" width="408" height="220" rx="32"/>
+    <rect x="230" y="1190" width="408" height="220" rx="32"/>
+    <rect x="820" y="650" width="408" height="220" rx="32"/>
+    <rect x="820" y="920" width="408" height="220" rx="32"/>
+    <rect x="820" y="1190" width="408" height="220" rx="32"/>
+    <rect x="1410" y="650" width="408" height="220" rx="32"/>
+    <rect x="1410" y="920" width="408" height="220" rx="32"/>
+    <rect x="1410" y="1190" width="408" height="220" rx="32"/>
+  </g>
+  <g font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="700" fill="#0F172A">
+    <text x="278" y="760">Hero Device</text>
+    <text x="278" y="1030">Feature Closeup</text>
+    <text x="278" y="1300">Review Strip</text>
+    <text x="868" y="760">iPhone 6.9</text>
+    <text x="868" y="1030">iPad 13</text>
+    <text x="868" y="1300">Mac 16:10</text>
+    <text x="1458" y="760">01-hero.png</text>
+    <text x="1458" y="1030">02-feature.png</text>
+    <text x="1458" y="1300">manifest.json</text>
+  </g>
+  <rect x="176" y="2410" width="1696" height="118" rx="34" fill="#0F172A"/>
+  <text x="230" y="2484" fill="#F8FAFC" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="700">Everything lives in gitci/screens and stays editable.</text>
+</svg>

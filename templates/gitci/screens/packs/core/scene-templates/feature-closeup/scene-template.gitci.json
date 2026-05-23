@@ -1,0 +1,34 @@
+{
+  "$schema": "https://screens.gitci.com/schemas/scene-template.gitci.schema.json",
+  "schemaVersion": 1,
+  "id": "gitci.core.feature-closeup",
+  "name": "Feature Closeup",
+  "pack": "gitci.core",
+  "entry": "@gitci/screens-templates-core",
+  "export": "FeatureCloseupScene",
+  "tags": ["feature", "device", "detail"],
+  "minAspectRatio": 0.42,
+  "supportedTargets": ["appstore.iphone.*", "appstore.ipad.*", "appstore.mac.*"],
+  "propsSchema": {
+    "type": "object",
+    "required": ["headline", "screenshot"],
+    "properties": {
+      "headline": { "type": "string", "title": "Headline" },
+      "subheadline": { "type": "string", "title": "Subheadline" },
+      "featureTitle": { "type": "string", "title": "Feature title" },
+      "featureBody": { "type": "string", "title": "Feature body" },
+      "screenshot": { "$ref": "#/$defs/assetRef" },
+      "device": {
+        "type": "string",
+        "enum": ["iphone-2d", "ipad-2d", "mac-2d"],
+        "default": "iphone-2d"
+      }
+    }
+  },
+  "previewProps": {
+    "headline": "Every output is predictable",
+    "subheadline": "Build plans make CI runs reviewable.",
+    "screenshot": { "kind": "asset", "path": "./preview-assets/iphone.svg" },
+    "device": "iphone-2d"
+  }
+}

@@ -159,6 +159,8 @@ public struct SceneSetManifest: Codable, Equatable, Sendable {
     public var schemaVersion: Int
     public var id: String
     public var name: String?
+    public var entry: String?
+    public var `export`: String?
     public var targets: [String]
     public var appearanceByTarget: [String: Appearance]?
     public var theme: ThemeSelection?

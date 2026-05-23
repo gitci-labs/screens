@@ -31,6 +31,8 @@ Phase 1 uses versioned JSON manifests that Swift can parse without executing Rea
 
 `scene-sets/<id>/scene-set.gitci.json` declares targets, appearance, theme, slots, variants, and props.
 
+`entry` and `export` are optional metadata for the matching TypeScript authoring file. The MVP planner still reads the JSON manifest directly; future GUI/codegen work can use the TypeScript entry point as the editable source.
+
 Target-aware variants are selected by `includeTargets` and `excludeTargets`. If `selectedVariant` is omitted, the planner picks the first variant matching the current target.
 
 Asset references are resolved relative to the scene set directory:

@@ -272,6 +272,8 @@ struct Init: ParsableCommand {
               "schemaVersion": 1,
               "id": "launch",
               "name": "Launch Screens",
+              "entry": "./scene-set.tsx",
+              "export": "sceneSet",
               "targets": [
                 "appstore.iphone.6_9.portrait"
               ],

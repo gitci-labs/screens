@@ -23,6 +23,8 @@ The authoritative renderer is Node + Playwright + Chromium. The current renderer
 
 When a render plan references scene template entries, the Node renderer generates a small registry module and builds it with Vite before launching Playwright. This keeps Swift out of React execution while still allowing local app repos to define their own `gitci/screens/packs/.../template.tsx` scene templates.
 
+`manifest.gitci-output.json` is the post-build index for consumers. It records the screenshot order, final dimensions, display gap, span count, span index, composite scene size, and clip rectangle for every output. Wide scenes can therefore be reconstructed in a gallery or editor without guessing where upload frames and hidden gaps were.
+
 Packaged environments can set:
 
 - `GITCI_SCREENS_JS_WORKSPACE`

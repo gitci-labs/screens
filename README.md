@@ -53,7 +53,7 @@ Projects can declare reusable template roots in `project.gitci.json` with local 
 
 `init` writes a placeholder SVG screenshot so the generated project can be validated and rendered immediately. Replace `gitci/screens/assets/iphone/screenshot.svg` with a real app screenshot when you are ready.
 
-`build` writes `manifest.gitci-output.json` next to the render plan. `gallery` writes a static HTML index under the selected scene set build directory.
+`build` writes `manifest.gitci-output.json` next to the render plan. The output manifest includes each screenshot's target dimensions plus span, span index, composite canvas, display gap, and clip rectangle metadata so galleries and future editors can reconstruct wide scenes precisely. `gallery` writes a static HTML index under the selected scene set build directory.
 
 ## Current Scope
 

@@ -2,9 +2,11 @@ import Foundation
 
 public struct RendererInvoker: Sendable {
     public var renderer: String
+    public var failOnOverflow: Bool
 
-    public init(renderer: String) {
+    public init(renderer: String, failOnOverflow: Bool = false) {
         self.renderer = renderer
+        self.failOnOverflow = failOnOverflow
     }
 
     public func render(planURL: URL) async throws {
@@ -20,7 +22,7 @@ public struct RendererInvoker: Sendable {
         let jsWorkspace = try Self.findJSWorkspace()
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-        process.arguments = [
+        var arguments = [
             "pnpm",
             "--dir",
             jsWorkspace.path,
@@ -29,6 +31,10 @@ public struct RendererInvoker: Sendable {
             "--plan",
             planURL.path
         ]
+        if failOnOverflow {
+            arguments.append("--fail-on-overflow")
+        }
+        process.arguments = arguments
         try process.run()
         process.waitUntilExit()
         guard process.terminationStatus == 0 else {

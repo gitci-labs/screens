@@ -62,6 +62,7 @@ type RegistryEntry = {
 
 type Args = {
   planPath: string
+  failOnOverflow: boolean
 }
 
 function parseArgs(): Args {
@@ -70,7 +71,8 @@ function parseArgs(): Args {
     throw new Error('Missing --plan path')
   }
   return {
-    planPath: resolve(process.argv[planIndex + 1])
+    planPath: resolve(process.argv[planIndex + 1]),
+    failOnOverflow: process.argv.includes('--fail-on-overflow')
   }
 }
 
@@ -306,6 +308,83 @@ async function createRenderServer(plan: RenderPlan, registryBundlePath?: string)
   }
 }
 
+type OverflowReport = {
+  hasOverflow: boolean
+  root?: {
+    clientWidth: number
+    clientHeight: number
+    scrollWidth: number
+    scrollHeight: number
+  }
+  elements: Array<{
+    tagName: string
+    id: string
+    className: string
+    text: string
+    clientWidth: number
+    clientHeight: number
+    scrollWidth: number
+    scrollHeight: number
+  }>
+}
+
+async function overflowReport(page: import('playwright').Page): Promise<OverflowReport> {
+  return page.evaluate(() => {
+    const root = document.getElementById('gitci-render-root')
+    const rootReport = root
+      ? {
+          clientWidth: root.clientWidth,
+          clientHeight: root.clientHeight,
+          scrollWidth: root.scrollWidth,
+          scrollHeight: root.scrollHeight
+        }
+      : undefined
+    const overflowingElements = Array.from(document.querySelectorAll<HTMLElement>('*'))
+      .filter(element => {
+        if (element.id === 'gitci-render-root') return false
+        const style = getComputedStyle(element)
+        const clipsX = style.overflowX === 'hidden' || style.overflowX === 'clip' || style.textOverflow === 'ellipsis'
+        const clipsY = style.overflowY === 'hidden' || style.overflowY === 'clip'
+        return (clipsX && element.scrollWidth > element.clientWidth + 1) ||
+          (clipsY && element.scrollHeight > element.clientHeight + 1)
+      })
+      .slice(0, 10)
+      .map(element => ({
+        tagName: element.tagName.toLowerCase(),
+        id: element.id,
+        className: typeof element.className === 'string' ? element.className : '',
+        text: (element.textContent ?? '').trim().replace(/\s+/g, ' ').slice(0, 120),
+        clientWidth: element.clientWidth,
+        clientHeight: element.clientHeight,
+        scrollWidth: element.scrollWidth,
+        scrollHeight: element.scrollHeight
+      }))
+    return {
+      hasOverflow: Boolean(
+        rootReport &&
+          (rootReport.scrollWidth > rootReport.clientWidth + 1 ||
+            rootReport.scrollHeight > rootReport.clientHeight + 1)
+      ) || overflowingElements.length > 0,
+      root: rootReport,
+      elements: overflowingElements
+    }
+  })
+}
+
+function describeOverflow(report: OverflowReport, target: Target, output: Output): string {
+  const root = report.root
+    ? `root ${report.root.scrollWidth}x${report.root.scrollHeight} over ${report.root.clientWidth}x${report.root.clientHeight}`
+    : 'missing render root'
+  const elements = report.elements.map(element => {
+    const label = [element.tagName, element.id ? `#${element.id}` : '', element.className ? `.${element.className}` : ''].join('')
+    return `${label || element.tagName} ${element.scrollWidth}x${element.scrollHeight} over ${element.clientWidth}x${element.clientHeight}: ${element.text}`
+  })
+  return [
+    `Overflow detected in ${target.id} ${output.outputPath} (${root}).`,
+    ...elements
+  ].join('\n')
+}
+
 async function main() {
   const args = parseArgs()
   const plan = JSON.parse(await readFile(args.planPath, 'utf8')) as RenderPlan
@@ -337,6 +416,12 @@ async function main() {
         const error = await page.evaluate(() => window.__gitciScreensError)
         if (error) {
           throw new Error(error)
+        }
+        if (args.failOnOverflow) {
+          const report = await overflowReport(page)
+          if (report.hasOverflow) {
+            throw new Error(describeOverflow(report, target, output))
+          }
         }
 
         const outputPath = resolve(plan.outputDirectory, output.outputPath)

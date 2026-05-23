@@ -27,6 +27,7 @@ export function SplitProofScene({
     : isWide
       ? context.compositeWidth * 0.44
       : context.compositeWidth * 0.68
+  const imageHeight = isWide ? context.compositeHeight * 0.64 : context.compositeHeight * 0.5
 
   return (
     <section
@@ -96,6 +97,7 @@ export function SplitProofScene({
           left: imageLeft,
           top: isWide ? context.compositeHeight * 0.18 : context.compositeHeight * 0.32,
           width: imageWidth,
+          height: imageHeight,
           borderRadius: 42,
           padding: 18,
           background: 'rgb(255 255 255 / 0.66)',
@@ -109,6 +111,8 @@ export function SplitProofScene({
           style={{
             display: 'block',
             width: '100%',
+            height: '100%',
+            objectFit: 'cover',
             borderRadius: 30
           }}
         />

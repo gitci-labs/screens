@@ -326,6 +326,9 @@ struct Build: AsyncParsableCommand {
     @Flag(name: .long, help: "Include a synthetic qps-overflow locale with long localized strings.")
     var overflowLocale = false
 
+    @Flag(name: .long, help: "Fail rendering when clipped DOM overflow is detected.")
+    var failOnOverflow = false
+
     @Option(name: .long, help: "Apply a named scene-set variant group.")
     var variantGroup: String?
 
@@ -383,7 +386,7 @@ struct Build: AsyncParsableCommand {
             throw ExitCode.failure
         }
         try context.writePlan()
-        try await RendererInvoker(renderer: renderer).render(planURL: context.planURL)
+        try await RendererInvoker(renderer: renderer, failOnOverflow: failOnOverflow).render(planURL: context.planURL)
         try context.writeOutputManifest()
         print(context.outputURL.path)
     }
@@ -429,6 +432,9 @@ struct Export: AsyncParsableCommand {
 
     @Flag(name: .long, help: "Include a synthetic qps-overflow locale with long localized strings.")
     var overflowLocale = false
+
+    @Flag(name: .long, help: "Fail rendering when clipped DOM overflow is detected.")
+    var failOnOverflow = false
 
     @Option(name: .long, help: "Apply a named scene-set variant group.")
     var variantGroup: String?
@@ -507,7 +513,7 @@ struct Export: AsyncParsableCommand {
         }
 
         try context.writePlan()
-        try await RendererInvoker(renderer: renderer).render(planURL: context.planURL)
+        try await RendererInvoker(renderer: renderer, failOnOverflow: failOnOverflow).render(planURL: context.planURL)
         try context.writeOutputManifest()
 
         let galleryIndexURL: URL?

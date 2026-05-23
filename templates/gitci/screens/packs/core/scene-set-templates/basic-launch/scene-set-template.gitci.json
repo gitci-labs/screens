@@ -4,7 +4,7 @@
   "id": "gitci.core.basic-launch",
   "name": "Basic Launch Screens",
   "pack": "gitci.core",
-  "summary": "A starter App Store screenshot set with a hero, a close-up feature, and a wide spanning scene.",
+  "summary": "A starter App Store screenshot set with a hero, a close-up feature, and an overview scene.",
   "tags": ["app-store", "starter", "device"],
   "sceneSet": {
     "schemaVersion": 1,
@@ -42,7 +42,7 @@
               "subheadline": "Use an existing screenshot, a strong benefit, and a clean device frame.",
               "screenshot": {
                 "kind": "asset",
-                "path": "../../assets/iphone/hero.png",
+                "path": "../../assets/iphone/hero.svg",
                 "alt": "Primary app screen"
               },
               "device": "iphone-2d",
@@ -64,7 +64,7 @@
               "subheadline": "Pair a short claim with the exact screen that proves it.",
               "screenshot": {
                 "kind": "asset",
-                "path": "../../assets/iphone/detail.png",
+                "path": "../../assets/iphone/detail.svg",
                 "alt": "Detailed feature screen"
               },
               "device": "iphone-2d"
@@ -73,19 +73,19 @@
         ]
       },
       {
-        "id": "wide",
-        "label": "Wide Story",
-        "selectedVariant": "wide-hero",
+        "id": "overview",
+        "label": "Overview",
+        "selectedVariant": "overview-hero",
         "variants": [
           {
-            "id": "wide-hero",
+            "id": "overview-hero",
             "sceneTemplate": "gitci.core.hero-device",
             "props": {
-              "headline": "Span screenshots when the story needs room",
-              "subheadline": "The planner renders one wide scene and clips it at frame and gap edges.",
+              "headline": "Adapt the story across every target",
+              "subheadline": "Use target-aware variants when iPhone, iPad, or Mac needs a different composition.",
               "screenshot": {
                 "kind": "asset",
-                "path": "../../assets/ipad/overview.png",
+                "path": "../../assets/ipad/overview.svg",
                 "alt": "Wide app overview"
               },
               "device": "ipad-2d",

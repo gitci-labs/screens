@@ -19,6 +19,7 @@ struct GitCIScreensCommand: AsyncParsableCommand {
             Archive.self,
             Gallery.self,
             Init.self,
+            SceneSets.self,
             Templates.self
         ]
     )
@@ -424,6 +425,140 @@ struct Init: ParsableCommand {
     }
 }
 
+struct SceneSets: ParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "scene-sets",
+        abstract: "Create and manage project scene sets.",
+        subcommands: [
+            Create.self
+        ]
+    )
+
+    struct Create: ParsableCommand {
+        static let configuration = CommandConfiguration(
+            abstract: "Create a project scene set from a reusable scene set template."
+        )
+
+        @Argument(help: "Project path. Defaults to current directory.")
+        var path: String = "."
+
+        @Option(name: .long, help: "Scene set template id.")
+        var template: String
+
+        @Option(name: .long, help: "New scene set id. Defaults to the template scene set id.")
+        var id: String?
+
+        @Option(name: .long, help: "New scene set display name.")
+        var name: String?
+
+        @Flag(name: .long, help: "Overwrite an existing scene-set manifest.")
+        var force = false
+
+        @Flag(name: .long, help: "Do not create placeholder SVG assets for missing asset references.")
+        var skipPlaceholderAssets = false
+
+        func run() throws {
+            let projectURL = URL(fileURLWithPath: path).standardizedFileURL
+            let screensRoot = try ScreensRootLocator.locate(from: projectURL)
+            let workspace = try ScreensWorkspace.load(root: screensRoot)
+            guard let templateManifest = workspace.sceneSetTemplates[template] else {
+                throw ValidationError("Unknown scene set template: \(template)")
+            }
+
+            var sceneSet = templateManifest.sceneSet
+            if let id {
+                sceneSet.id = id
+            }
+            if let name {
+                sceneSet.name = name
+            }
+
+            let sceneSetRoot = screensRoot
+                .appendingPathComponent("scene-sets")
+                .appendingPathComponent(sceneSet.id)
+            let manifestURL = sceneSetRoot.appendingPathComponent("scene-set.gitci.json")
+            if FileManager.default.fileExists(atPath: manifestURL.path), !force {
+                throw ValidationError("Scene set already exists at \(manifestURL.path). Use --force to overwrite it.")
+            }
+
+            try FileManager.default.createDirectory(at: sceneSetRoot, withIntermediateDirectories: true)
+            try JSONEncoder.gitci.encode(EncodedSceneSetManifest(sceneSet))
+                .write(to: manifestURL)
+
+            if !skipPlaceholderAssets {
+                try Self.writePlaceholderAssets(for: sceneSet, sceneSetRoot: sceneSetRoot)
+            }
+
+            print(manifestURL.path)
+        }
+
+        private static func writePlaceholderAssets(for sceneSet: SceneSetManifest, sceneSetRoot: URL) throws {
+            let sceneSetDirectory = URL(fileURLWithPath: sceneSetRoot.path, isDirectory: true)
+            let paths = Set(
+                sceneSet.slots.flatMap { slot in
+                    slot.variants.flatMap { variant in
+                        collectAssetPaths(in: variant.props)
+                    }
+                }
+            )
+            for path in paths.sorted() {
+                guard !path.hasPrefix("http://"), !path.hasPrefix("https://") else {
+                    continue
+                }
+                let assetURL = URL(fileURLWithPath: path, relativeTo: sceneSetDirectory).standardizedFileURL
+                guard assetURL.pathExtension.lowercased() == "svg" else {
+                    continue
+                }
+                guard !FileManager.default.fileExists(atPath: assetURL.path) else {
+                    continue
+                }
+                try FileManager.default.createDirectory(
+                    at: assetURL.deletingLastPathComponent(),
+                    withIntermediateDirectories: true
+                )
+                try placeholderSVG(title: assetURL.deletingPathExtension().lastPathComponent)
+                    .write(to: assetURL, atomically: true, encoding: .utf8)
+            }
+        }
+
+        private static func collectAssetPaths(in value: JSONValue) -> [String] {
+            switch value {
+            case let .object(object):
+                if object["kind"]?.stringValue == "asset", let path = object["path"]?.stringValue {
+                    return [path]
+                }
+                return object.values.flatMap(collectAssetPaths)
+            case let .array(array):
+                return array.flatMap(collectAssetPaths)
+            case .string, .number, .bool, .null:
+                return []
+            }
+        }
+
+        private static func placeholderSVG(title: String) -> String {
+            """
+            <svg xmlns="http://www.w3.org/2000/svg" width="390" height="844" viewBox="0 0 390 844">
+              <rect width="390" height="844" rx="42" fill="#F8FAFC"/>
+              <rect x="32" y="72" width="150" height="24" rx="12" fill="#CBD5E1"/>
+              <text x="32" y="154" fill="#111827" font-family="Arial, Helvetica, sans-serif" font-size="38" font-weight="700">\(escapeXML(title))</text>
+              <rect x="32" y="210" width="326" height="112" rx="28" fill="#DBEAFE"/>
+              <rect x="32" y="350" width="326" height="112" rx="28" fill="#CCFBF1"/>
+              <rect x="32" y="490" width="326" height="112" rx="28" fill="#FFEDD5"/>
+              <rect x="32" y="656" width="326" height="92" rx="28" fill="#0F172A"/>
+            </svg>
+            """
+        }
+
+        private static func escapeXML(_ value: String) -> String {
+            value
+                .replacingOccurrences(of: "&", with: "&amp;")
+                .replacingOccurrences(of: "<", with: "&lt;")
+                .replacingOccurrences(of: ">", with: "&gt;")
+                .replacingOccurrences(of: "\"", with: "&quot;")
+        }
+    }
+}
+
 struct Templates: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "templates",
@@ -730,6 +865,42 @@ private struct DiscoverySummary: Codable {
 private struct DiscoverySceneSet: Codable {
     var id: String
     var name: String?
+}
+
+private struct EncodedSceneSetManifest: Encodable {
+    var schema = "https://screens.gitci.com/schemas/scene-set.gitci.schema.json"
+    var manifest: SceneSetManifest
+
+    init(_ manifest: SceneSetManifest) {
+        self.manifest = manifest
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case schema = "$schema"
+        case schemaVersion
+        case id
+        case name
+        case entry
+        case `export`
+        case targets
+        case appearanceByTarget
+        case theme
+        case slots
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(schema, forKey: .schema)
+        try container.encode(manifest.schemaVersion, forKey: .schemaVersion)
+        try container.encode(manifest.id, forKey: .id)
+        try container.encodeIfPresent(manifest.name, forKey: .name)
+        try container.encodeIfPresent(manifest.entry, forKey: .entry)
+        try container.encodeIfPresent(manifest.export, forKey: .export)
+        try container.encode(manifest.targets, forKey: .targets)
+        try container.encodeIfPresent(manifest.appearanceByTarget, forKey: .appearanceByTarget)
+        try container.encodeIfPresent(manifest.theme, forKey: .theme)
+        try container.encode(manifest.slots, forKey: .slots)
+    }
 }
 
 private struct DoctorSummary: Codable {

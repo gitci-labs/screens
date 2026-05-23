@@ -63,4 +63,23 @@ public struct RendererInvoker: Sendable {
             current = parent
         }
     }
+
+    public static func verifyNodePlaywrightRenderer(jsWorkspace: URL) throws {
+        let rendererPath = jsWorkspace
+            .appendingPathComponent("packages")
+            .appendingPathComponent("renderer-node")
+            .appendingPathComponent("dist")
+            .appendingPathComponent("render.js")
+        let harnessPath = jsWorkspace
+            .appendingPathComponent("apps")
+            .appendingPathComponent("renderer-harness")
+            .appendingPathComponent("dist")
+            .appendingPathComponent("index.html")
+        guard FileManager.default.fileExists(atPath: rendererPath.path) else {
+            throw ScreensError.rendererNotBuilt(rendererPath.path)
+        }
+        guard FileManager.default.fileExists(atPath: harnessPath.path) else {
+            throw ScreensError.rendererNotBuilt(harnessPath.path)
+        }
+    }
 }

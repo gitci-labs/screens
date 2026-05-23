@@ -32,6 +32,7 @@ struct Doctor: ParsableCommand {
         let screensRoot = try ScreensRootLocator.locate(from: projectURL)
         _ = try ScreensWorkspace.load(root: screensRoot)
         let jsWorkspace = try RendererInvoker.findJSWorkspace()
+        try RendererInvoker.verifyNodePlaywrightRenderer(jsWorkspace: jsWorkspace)
         print("screens root: \(screensRoot.path)")
         print("js workspace: \(jsWorkspace.path)")
         print("renderer: node-playwright")

@@ -23,6 +23,7 @@ public enum ScreensError: Error, CustomStringConvertible, Equatable {
     case unsupportedRenderer(String)
     case rendererFailed(Int32)
     case jsWorkspaceNotFound(URL)
+    case rendererNotBuilt(String)
 
     public var description: String {
         switch self {
@@ -70,6 +71,8 @@ public enum ScreensError: Error, CustomStringConvertible, Equatable {
             return "Renderer failed with exit status \(status)."
         case let .jsWorkspaceNotFound(start):
             return "Could not find js/package.json from \(start.path)."
+        case let .rendererNotBuilt(path):
+            return "Renderer build artifact not found: \(path). Run `cd js && pnpm build`."
         }
     }
 }

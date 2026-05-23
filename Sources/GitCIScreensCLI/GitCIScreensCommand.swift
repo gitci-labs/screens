@@ -451,6 +451,13 @@ struct SceneSets: ParsableCommand {
         @Option(name: .long, help: "New scene set display name.")
         var name: String?
 
+        @Option(
+            name: .long,
+            parsing: .upToNextOption,
+            help: "Asset override in name=path form. The name matches an asset placeholder basename, for example hero=/path/to/screenshot.png."
+        )
+        var asset: [String] = []
+
         @Flag(name: .long, help: "Overwrite an existing scene-set manifest.")
         var force = false
 
@@ -472,6 +479,7 @@ struct SceneSets: ParsableCommand {
             if let name {
                 sceneSet.name = name
             }
+            let assetOverrides = try Self.parseAssetOverrides(asset)
 
             let sceneSetRoot = screensRoot
                 .appendingPathComponent("scene-sets")
@@ -482,6 +490,11 @@ struct SceneSets: ParsableCommand {
             }
 
             try FileManager.default.createDirectory(at: sceneSetRoot, withIntermediateDirectories: true)
+            sceneSet = try Self.applyAssetOverrides(
+                assetOverrides,
+                to: sceneSet,
+                sceneSetRoot: sceneSetRoot
+            )
             try JSONEncoder.gitci.encode(EncodedSceneSetManifest(sceneSet))
                 .write(to: manifestURL)
 
@@ -490,6 +503,121 @@ struct SceneSets: ParsableCommand {
             }
 
             print(manifestURL.path)
+        }
+
+        private static func parseAssetOverrides(_ values: [String]) throws -> [String: URL] {
+            var overrides: [String: URL] = [:]
+            for value in values {
+                guard let separator = value.firstIndex(of: "=") else {
+                    throw ValidationError("Invalid --asset value '\(value)'. Use name=path.")
+                }
+                let key = String(value[..<separator])
+                let rawPath = String(value[value.index(after: separator)...])
+                guard !key.isEmpty, !rawPath.isEmpty else {
+                    throw ValidationError("Invalid --asset value '\(value)'. Use name=path.")
+                }
+                let sourceURL = URL(fileURLWithPath: rawPath).standardizedFileURL
+                guard FileManager.default.fileExists(atPath: sourceURL.path) else {
+                    throw ValidationError("Asset override not found: \(sourceURL.path)")
+                }
+                overrides[key] = sourceURL
+            }
+            return overrides
+        }
+
+        private static func applyAssetOverrides(
+            _ overrides: [String: URL],
+            to sceneSet: SceneSetManifest,
+            sceneSetRoot: URL
+        ) throws -> SceneSetManifest {
+            guard !overrides.isEmpty else {
+                return sceneSet
+            }
+
+            let sceneSetDirectory = URL(fileURLWithPath: sceneSetRoot.path, isDirectory: true)
+            var unmatched = Set(overrides.keys)
+            var updated = sceneSet
+            updated.slots = try sceneSet.slots.map { slot in
+                var updatedSlot = slot
+                updatedSlot.variants = try slot.variants.map { variant in
+                    var updatedVariant = variant
+                    updatedVariant.props = try replaceAssetRefs(
+                        in: variant.props,
+                        sceneSetDirectory: sceneSetDirectory,
+                        overrides: overrides,
+                        unmatched: &unmatched
+                    )
+                    return updatedVariant
+                }
+                return updatedSlot
+            }
+
+            if let first = unmatched.sorted().first {
+                throw ValidationError("No asset placeholder matched --asset \(first). Match by placeholder basename, for example hero=...")
+            }
+
+            return updated
+        }
+
+        private static func replaceAssetRefs(
+            in value: JSONValue,
+            sceneSetDirectory: URL,
+            overrides: [String: URL],
+            unmatched: inout Set<String>
+        ) throws -> JSONValue {
+            switch value {
+            case let .object(object):
+                if object["kind"]?.stringValue == "asset", let path = object["path"]?.stringValue {
+                    let key = URL(fileURLWithPath: path).deletingPathExtension().lastPathComponent
+                    guard let sourceURL = overrides[key] else {
+                        return value
+                    }
+                    let originalURL = URL(fileURLWithPath: path, relativeTo: sceneSetDirectory)
+                        .standardizedFileURL
+                    let extensionToUse = sourceURL.pathExtension.isEmpty
+                        ? originalURL.pathExtension
+                        : sourceURL.pathExtension
+                    let targetURL = originalURL
+                        .deletingPathExtension()
+                        .appendingPathExtension(extensionToUse)
+                    try FileManager.default.createDirectory(
+                        at: targetURL.deletingLastPathComponent(),
+                        withIntermediateDirectories: true
+                    )
+                    if FileManager.default.fileExists(atPath: targetURL.path) {
+                        try FileManager.default.removeItem(at: targetURL)
+                    }
+                    try FileManager.default.copyItem(at: sourceURL, to: targetURL)
+                    unmatched.remove(key)
+
+                    var updatedObject = object
+                    updatedObject["path"] = .string(relativePath(from: sceneSetDirectory, to: targetURL))
+                    return .object(updatedObject)
+                }
+
+                var mapped: [String: JSONValue] = [:]
+                mapped.reserveCapacity(object.count)
+                for (key, nestedValue) in object {
+                    mapped[key] = try replaceAssetRefs(
+                        in: nestedValue,
+                        sceneSetDirectory: sceneSetDirectory,
+                        overrides: overrides,
+                        unmatched: &unmatched
+                    )
+                }
+                return .object(mapped)
+            case let .array(array):
+                return .array(try array.map {
+                    try replaceAssetRefs(
+                        in: $0,
+                        sceneSetDirectory: sceneSetDirectory,
+                        overrides: overrides,
+                        unmatched: &unmatched
+                    )
+                })
+            case .string, .number, .bool, .null:
+                return value
+            }
         }
 
         private static func writePlaceholderAssets(for sceneSet: SceneSetManifest, sceneSetRoot: URL) throws {
@@ -506,6 +634,9 @@ struct SceneSets: ParsableCommand {
                     continue
                 }
                 let assetURL = URL(fileURLWithPath: path, relativeTo: sceneSetDirectory).standardizedFileURL
+                guard assetURL.path.hasPrefix(sceneSetDirectory.deletingLastPathComponent().deletingLastPathComponent().path) else {
+                    continue
+                }
                 guard assetURL.pathExtension.lowercased() == "svg" else {
                     continue
                 }
@@ -555,6 +686,21 @@ struct SceneSets: ParsableCommand {
                 .replacingOccurrences(of: "<", with: "&lt;")
                 .replacingOccurrences(of: ">", with: "&gt;")
                 .replacingOccurrences(of: "\"", with: "&quot;")
+        }
+
+        private static func relativePath(from directory: URL, to target: URL) -> String {
+            let baseComponents = directory.standardizedFileURL.pathComponents
+            let targetComponents = target.standardizedFileURL.pathComponents
+            var sharedCount = 0
+            while sharedCount < baseComponents.count,
+                  sharedCount < targetComponents.count,
+                  baseComponents[sharedCount] == targetComponents[sharedCount] {
+                sharedCount += 1
+            }
+            let parentSteps = Array(repeating: "..", count: baseComponents.count - sharedCount)
+            let targetSteps = targetComponents.dropFirst(sharedCount)
+            let path = (parentSteps + targetSteps).joined(separator: "/")
+            return path.isEmpty ? "." : path
         }
     }
 }

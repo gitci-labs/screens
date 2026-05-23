@@ -173,6 +173,13 @@ public struct ProjectValidator: Sendable {
                 outputPath: path,
                 sourceId: sourceID
             )
+        case let .unknownVariantGroup(_, groupID):
+            return ProjectDiagnostic(
+                severity: .error,
+                code: "variant-group.unknown",
+                message: screensError.description,
+                sourceId: groupID
+            )
         case let .projectSourceMissingPath(sourceID):
             return ProjectDiagnostic(
                 severity: .error,

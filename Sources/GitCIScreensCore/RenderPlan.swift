@@ -14,6 +14,18 @@ public struct RenderPlan: Codable, Equatable, Sendable {
 public struct RenderPlanSceneSet: Codable, Equatable, Sendable {
     public var id: String
     public var name: String?
+    public var variantGroup: RenderPlanVariantGroup?
+
+    public init(id: String, name: String?, variantGroup: RenderPlanVariantGroup? = nil) {
+        self.id = id
+        self.name = name
+        self.variantGroup = variantGroup
+    }
+}
+
+public struct RenderPlanVariantGroup: Codable, Equatable, Sendable {
+    public var id: String
+    public var name: String?
 }
 
 public struct RenderPlanLocale: Codable, Equatable, Sendable {

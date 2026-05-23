@@ -145,6 +145,9 @@ struct Validate: ParsableCommand {
     @Flag(name: .long, help: "Include a synthetic qps-ploc pseudo-locale for localization stress testing.")
     var pseudoLocale = false
 
+    @Option(name: .long, help: "Apply a named scene-set variant group.")
+    var variantGroup: String?
+
     @Flag(name: .long, help: "Treat warnings as failures.")
     var strict = false
 
@@ -155,7 +158,10 @@ struct Validate: ParsableCommand {
         let selectedSceneSet = try workspace.resolveSceneSet(id: sceneSet)
         let report = ProjectValidator(
             workspace: workspace,
-            options: RenderPlannerOptions(includePseudoLocale: pseudoLocale)
+            options: RenderPlannerOptions(
+                includePseudoLocale: pseudoLocale,
+                variantGroupID: variantGroup
+            )
         ).validate(sceneSet: selectedSceneSet)
 
         if json {
@@ -192,12 +198,16 @@ struct Plan: ParsableCommand {
     @Flag(name: .long, help: "Include a synthetic qps-ploc pseudo-locale for localization stress testing.")
     var pseudoLocale = false
 
+    @Option(name: .long, help: "Apply a named scene-set variant group.")
+    var variantGroup: String?
+
     func run() throws {
         let context = try BuildContext(
             path: path,
             sceneSet: sceneSet,
             out: nil,
-            includePseudoLocale: pseudoLocale
+            includePseudoLocale: pseudoLocale,
+            variantGroup: variantGroup
         ).load()
         let planURL = URL(
             fileURLWithPath: out ?? context.planURL.path,
@@ -235,16 +245,23 @@ struct Build: AsyncParsableCommand {
     @Flag(name: .long, help: "Include a synthetic qps-ploc pseudo-locale for localization stress testing.")
     var pseudoLocale = false
 
+    @Option(name: .long, help: "Apply a named scene-set variant group.")
+    var variantGroup: String?
+
     func run() async throws {
         let context = try BuildContext(
             path: path,
             sceneSet: sceneSet,
             out: out,
-            includePseudoLocale: pseudoLocale
+            includePseudoLocale: pseudoLocale,
+            variantGroup: variantGroup
         ).load()
         let report = ProjectValidator(
             workspace: context.workspace,
-            options: RenderPlannerOptions(includePseudoLocale: pseudoLocale)
+            options: RenderPlannerOptions(
+                includePseudoLocale: pseudoLocale,
+                variantGroupID: variantGroup
+            )
         ).validate(sceneSet: context.sceneSet)
         for diagnostic in report.diagnostics {
             printError("\(diagnostic.severity.rawValue): \(diagnostic.code): \(diagnostic.message)")
@@ -297,16 +314,23 @@ struct Export: AsyncParsableCommand {
     @Flag(name: .long, help: "Include a synthetic qps-ploc pseudo-locale for localization stress testing.")
     var pseudoLocale = false
 
+    @Option(name: .long, help: "Apply a named scene-set variant group.")
+    var variantGroup: String?
+
     func run() async throws {
         let context = try BuildContext(
             path: path,
             sceneSet: sceneSet,
             out: out,
-            includePseudoLocale: pseudoLocale
+            includePseudoLocale: pseudoLocale,
+            variantGroup: variantGroup
         ).load()
         let report = ProjectValidator(
             workspace: context.workspace,
-            options: RenderPlannerOptions(includePseudoLocale: pseudoLocale)
+            options: RenderPlannerOptions(
+                includePseudoLocale: pseudoLocale,
+                variantGroupID: variantGroup
+            )
         ).validate(sceneSet: context.sceneSet)
         for diagnostic in report.diagnostics {
             printError("\(diagnostic.severity.rawValue): \(diagnostic.code): \(diagnostic.message)")
@@ -340,7 +364,7 @@ struct Export: AsyncParsableCommand {
                 URL(fileURLWithPath: archiveOut, relativeTo: projectURL).standardizedFileURL
             } else {
                 URL(
-                    fileURLWithPath: "\(context.sceneSet.id).zip",
+                    fileURLWithPath: context.defaultArchiveName,
                     relativeTo: context.outputURL.deletingLastPathComponent()
                 ).standardizedFileURL
             }
@@ -392,8 +416,16 @@ struct Archive: ParsableCommand {
     @Option(name: .long, help: "Zip output path.")
     var out: String?
 
+    @Option(name: .long, help: "Use build output for a named scene-set variant group.")
+    var variantGroup: String?
+
     func run() throws {
-        let context = try BuildContext(path: path, sceneSet: sceneSet, out: nil).load()
+        let context = try BuildContext(
+            path: path,
+            sceneSet: sceneSet,
+            out: nil,
+            variantGroup: variantGroup
+        ).load()
         let manifestURL = context.outputURL.appendingPathComponent("manifest.gitci-output.json")
         guard FileManager.default.fileExists(atPath: manifestURL.path) else {
             throw ValidationError("No build manifest found at \(manifestURL.path). Run `gitci-screens build` first.")
@@ -404,7 +436,7 @@ struct Archive: ParsableCommand {
             URL(fileURLWithPath: out, relativeTo: projectURL).standardizedFileURL
         } else {
             URL(
-                fileURLWithPath: "\(context.sceneSet.id).zip",
+                fileURLWithPath: context.defaultArchiveName,
                 relativeTo: context.outputURL.deletingLastPathComponent()
             ).standardizedFileURL
         }
@@ -450,11 +482,19 @@ struct Fastlane: ParsableCommand {
     @Option(name: .long, help: "Locale folder to use when the scene set has no locales.")
     var defaultLocale: String = "en-US"
 
+    @Option(name: .long, help: "Use build output for a named scene-set variant group.")
+    var variantGroup: String?
+
     @Flag(name: .long, help: "Print JSON.")
     var json = false
 
     func run() throws {
-        let context = try BuildContext(path: path, sceneSet: sceneSet, out: nil).load()
+        let context = try BuildContext(
+            path: path,
+            sceneSet: sceneSet,
+            out: nil,
+            variantGroup: variantGroup
+        ).load()
         let manifestURL = context.outputURL.appendingPathComponent("manifest.gitci-output.json")
         guard FileManager.default.fileExists(atPath: manifestURL.path) else {
             throw ValidationError("No build manifest found at \(manifestURL.path). Run `gitci-screens build` first.")
@@ -494,19 +534,26 @@ struct Gallery: ParsableCommand {
     @Option(name: .long, help: "Gallery output directory.")
     var out: String?
 
+    @Option(name: .long, help: "Use build output for a named scene-set variant group.")
+    var variantGroup: String?
+
     func run() throws {
         let projectURL = URL(fileURLWithPath: path).standardizedFileURL
         let screensRoot = try ScreensRootLocator.locate(from: projectURL)
         let workspace = try ScreensWorkspace.load(root: screensRoot)
         let selectedSceneSet = try workspace.resolveSceneSet(id: sceneSet)
+        let variantGroupPath = variantGroup.map { "/\(BuildContext.pathComponent($0))" } ?? ""
         let outputURL = URL(
-            fileURLWithPath: out ?? "build/\(selectedSceneSet.id)/gallery",
+            fileURLWithPath: out ?? "build/\(selectedSceneSet.id)\(variantGroupPath)/gallery",
             relativeTo: screensRoot
         ).standardizedFileURL
-        let buildOutputURL = screensRoot
+        var buildOutputURL = screensRoot
             .appendingPathComponent("build")
             .appendingPathComponent(selectedSceneSet.id)
             .standardizedFileURL
+        if let variantGroup {
+            buildOutputURL.appendPathComponent(BuildContext.pathComponent(variantGroup))
+        }
 
         try GalleryGenerator(workspace: workspace).generate(
             outputURL: outputURL,
@@ -1283,6 +1330,7 @@ private struct BuildContext {
     var sceneSet: String?
     var out: String?
     var includePseudoLocale = false
+    var variantGroup: String?
 
     func load() throws -> LoadedBuildContext {
         let projectURL = URL(fileURLWithPath: path).standardizedFileURL
@@ -1294,15 +1342,21 @@ private struct BuildContext {
         if let out {
             outputURL = URL(fileURLWithPath: out, relativeTo: projectURL).standardizedFileURL
         } else {
-            outputURL = screensRoot
+            var defaultOutputURL = screensRoot
                 .appendingPathComponent("build")
                 .appendingPathComponent(selectedSceneSet.id)
-                .standardizedFileURL
+            if let variantGroup {
+                defaultOutputURL.appendPathComponent(Self.pathComponent(variantGroup))
+            }
+            outputURL = defaultOutputURL.standardizedFileURL
         }
 
         let plan = try RenderPlanner(
             workspace: workspace,
-            options: RenderPlannerOptions(includePseudoLocale: includePseudoLocale)
+            options: RenderPlannerOptions(
+                includePseudoLocale: includePseudoLocale,
+                variantGroupID: variantGroup
+            )
         ).makePlan(
             sceneSet: selectedSceneSet,
             outputDirectory: outputURL
@@ -1315,6 +1369,15 @@ private struct BuildContext {
             plan: plan
         )
     }
+
+    static func pathComponent(_ value: String) -> String {
+        let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-_"))
+        let scalars = value.unicodeScalars.map { scalar in
+            allowed.contains(scalar) ? Character(scalar) : "-"
+        }
+        let component = String(scalars)
+        return component.isEmpty ? "variant-group" : component
+    }
 }
 
 private struct LoadedBuildContext {
@@ -1323,6 +1386,13 @@ private struct LoadedBuildContext {
     var outputURL: URL
     var planURL: URL
     var plan: RenderPlan
+
+    var defaultArchiveName: String {
+        if let variantGroup = plan.sceneSet.variantGroup {
+            return "\(sceneSet.id)-\(BuildContext.pathComponent(variantGroup.id)).zip"
+        }
+        return "\(sceneSet.id).zip"
+    }
 
     func writePlan() throws {
         try? FileManager.default.removeItem(at: outputURL)
@@ -1372,6 +1442,7 @@ private struct EncodedSceneSetManifest: Encodable {
         case appearanceByTarget
         case theme
         case locales
+        case variantGroups
         case slots
     }
 
@@ -1387,6 +1458,7 @@ private struct EncodedSceneSetManifest: Encodable {
         try container.encodeIfPresent(manifest.appearanceByTarget, forKey: .appearanceByTarget)
         try container.encodeIfPresent(manifest.theme, forKey: .theme)
         try container.encodeIfPresent(manifest.locales, forKey: .locales)
+        try container.encodeIfPresent(manifest.variantGroups, forKey: .variantGroups)
         try container.encode(manifest.slots, forKey: .slots)
     }
 }

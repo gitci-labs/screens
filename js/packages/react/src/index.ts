@@ -54,6 +54,11 @@ export type SceneSetDefinition = {
     name?: string
     strings: Record<string, string>
   }>
+  variantGroups?: Array<{
+    id: string
+    name?: string
+    selections: Record<string, string>
+  }>
   slots: SceneSlot[]
 }
 

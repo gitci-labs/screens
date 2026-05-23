@@ -295,6 +295,86 @@ final class WorkspacePlanningTests: XCTestCase {
         XCTAssertGreaterThan(pseudoHeadline.count, "Ship screenshots".count)
     }
 
+    func testPlannerAppliesNamedVariantGroupSelections() throws {
+        let root = try exampleRoot()
+        let workspace = try ScreensWorkspace.load(root: root)
+        var sceneSet = try workspace.resolveSceneSet(id: "launch")
+        sceneSet.manifest.targets = ["appstore.iphone.6_9.portrait"]
+        sceneSet.manifest.variantGroups = [
+            SceneSetVariantGroup(
+                id: "ppo-a",
+                name: "PPO A",
+                selections: [
+                    "hero": "alternate"
+                ]
+            )
+        ]
+        sceneSet.manifest.slots = [
+            SceneSlot(
+                id: "hero",
+                label: nil,
+                selectedVariant: "default",
+                variants: [
+                    SceneVariant(
+                        id: "default",
+                        sceneTemplate: "gitci.core.hero-device",
+                        includeTargets: nil,
+                        excludeTargets: nil,
+                        props: .object([
+                            "headline": .string("Default headline"),
+                            "screenshot": .object([
+                                "kind": .string("asset"),
+                                "path": .string("../../assets/iphone/inbox.svg")
+                            ])
+                        ])
+                    ),
+                    SceneVariant(
+                        id: "alternate",
+                        sceneTemplate: "gitci.core.hero-device",
+                        includeTargets: nil,
+                        excludeTargets: nil,
+                        props: .object([
+                            "headline": .string("Alternate headline"),
+                            "screenshot": .object([
+                                "kind": .string("asset"),
+                                "path": .string("../../assets/iphone/inbox.svg")
+                            ])
+                        ])
+                    )
+                ]
+            )
+        ]
+
+        let plan = try RenderPlanner(
+            workspace: workspace,
+            options: RenderPlannerOptions(variantGroupID: "ppo-a")
+        ).makePlan(
+            sceneSet: sceneSet,
+            outputDirectory: root.appendingPathComponent("build/test")
+        )
+        let output = try XCTUnwrap(plan.targets.first?.outputs.first)
+
+        XCTAssertEqual(plan.sceneSet.variantGroup?.id, "ppo-a")
+        XCTAssertEqual(output.variantId, "alternate")
+        XCTAssertEqual(output.props.objectValue?["headline"]?.stringValue, "Alternate headline")
+        XCTAssertEqual(OutputManifest(plan: plan).sceneSet.variantGroup?.name, "PPO A")
+    }
+
+    func testValidationReportsUnknownVariantGroup() throws {
+        let root = try exampleRoot()
+        let workspace = try ScreensWorkspace.load(root: root)
+        let sceneSet = try workspace.resolveSceneSet(id: "launch")
+        let report = ProjectValidator(
+            workspace: workspace,
+            options: RenderPlannerOptions(variantGroupID: "missing")
+        ).validate(sceneSet: sceneSet)
+        let diagnostic = try XCTUnwrap(report.diagnostics.first)
+
+        XCTAssertTrue(report.hasErrors)
+        XCTAssertEqual(diagnostic.code, "variant-group.unknown")
+        XCTAssertEqual(diagnostic.sourceId, "missing")
+    }
+
     func testValidationReportsMissingLocalizedString() throws {
         let root = try exampleRoot()
         let workspace = try ScreensWorkspace.load(root: root)

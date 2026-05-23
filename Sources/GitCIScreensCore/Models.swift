@@ -176,7 +176,14 @@ public struct SceneSetManifest: Codable, Equatable, Sendable {
     public var appearanceByTarget: [String: Appearance]?
     public var theme: ThemeSelection?
     public var locales: [SceneSetLocale]?
+    public var variantGroups: [SceneSetVariantGroup]?
     public var slots: [SceneSlot]
+}
+
+public struct SceneSetVariantGroup: Codable, Equatable, Sendable {
+    public var id: String
+    public var name: String?
+    public var selections: [String: String]
 }
 
 public struct SceneSetLocale: Codable, Equatable, Sendable {

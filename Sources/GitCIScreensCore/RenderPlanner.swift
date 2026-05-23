@@ -12,6 +12,8 @@ public struct RenderPlanner: Sendable {
     public func makePlan(sceneSet: LoadedSceneSet, outputDirectory: URL) throws -> RenderPlan {
         var planTargets: [RenderPlanTarget] = []
         var usedSceneTemplateIDs = Set<String>()
+        let variantGroup = try resolveVariantGroup(in: sceneSet.manifest)
+        let variantSelections = variantGroup?.selections ?? [:]
 
         for targetID in sceneSet.manifest.targets {
             guard let target = workspace.targets[targetID] else {
@@ -41,7 +43,11 @@ public struct RenderPlanner: Sendable {
             for locale in normalizedLocales(sceneSet.manifest) {
                 var localeOutputCount = 0
                 for slot in sceneSet.manifest.slots {
-                    guard let variant = try selectedVariant(in: slot, targetID: targetID) else {
+                    guard let variant = try selectedVariant(
+                        in: slot,
+                        targetID: targetID,
+                        variantSelections: variantSelections
+                    ) else {
                         continue
                     }
                     guard let template = workspace.sceneTemplates[variant.sceneTemplate] else {
@@ -117,7 +123,13 @@ public struct RenderPlanner: Sendable {
             rootDirectory: workspace.rootURL.path,
             outputDirectory: outputDirectory.standardizedFileURL.path,
             assetBaseURL: workspace.rootURL.absoluteURL.absoluteString,
-            sceneSet: RenderPlanSceneSet(id: sceneSet.id, name: sceneSet.manifest.name),
+            sceneSet: RenderPlanSceneSet(
+                id: sceneSet.id,
+                name: sceneSet.manifest.name,
+                variantGroup: variantGroup.map {
+                    RenderPlanVariantGroup(id: $0.id, name: $0.name)
+                }
+            ),
             targets: planTargets,
             registry: RenderPlanRegistry(
                 moduleURL: "generated:gitci.registry",
@@ -190,7 +202,18 @@ public struct RenderPlanner: Sendable {
         }
     }
 
-    private func selectedVariant(in slot: SceneSlot, targetID: String) throws -> SceneVariant? {
+    private func selectedVariant(
+        in slot: SceneSlot,
+        targetID: String,
+        variantSelections: [String: String]
+    ) throws -> SceneVariant? {
+        if let selectedVariant = variantSelections[slot.id] {
+            guard let found = slot.variants.first(where: { $0.id == selectedVariant }) else {
+                throw ScreensError.missingVariant(slotID: slot.id, variantID: selectedVariant)
+            }
+            return isVariant(found, includedIn: targetID) ? found : nil
+        }
+
         if let selectedVariant = slot.selectedVariant {
             guard let found = slot.variants.first(where: { $0.id == selectedVariant }) else {
                 throw ScreensError.missingVariant(slotID: slot.id, variantID: selectedVariant)
@@ -202,6 +225,16 @@ public struct RenderPlanner: Sendable {
             throw ScreensError.noVariant(slotID: slot.id)
         }
         return slot.variants.first { isVariant($0, includedIn: targetID) }
+    }
+
+    private func resolveVariantGroup(in sceneSet: SceneSetManifest) throws -> SceneSetVariantGroup? {
+        guard let groupID = options.variantGroupID else {
+            return nil
+        }
+        guard let group = sceneSet.variantGroups?.first(where: { $0.id == groupID }) else {
+            throw ScreensError.unknownVariantGroup(sceneSetID: sceneSet.id, groupID: groupID)
+        }
+        return group
     }
 
     private func isVariant(_ variant: SceneVariant, includedIn targetID: String) -> Bool {
@@ -379,8 +412,10 @@ public struct RenderPlanner: Sendable {
 
 public struct RenderPlannerOptions: Equatable, Sendable {
     public var includePseudoLocale: Bool
+    public var variantGroupID: String?
 
-    public init(includePseudoLocale: Bool = false) {
+    public init(includePseudoLocale: Bool = false, variantGroupID: String? = nil) {
         self.includePseudoLocale = includePseudoLocale
+        self.variantGroupID = variantGroupID
     }
 }

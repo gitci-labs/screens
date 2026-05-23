@@ -35,6 +35,31 @@ Phase 1 uses versioned JSON manifests that Swift can parse without executing Rea
 
 Target-aware variants are selected by `includeTargets` and `excludeTargets`. If `selectedVariant` is omitted, the planner picks the first variant matching the current target.
 
+Named `variantGroups` let CI build product-page experiments without editing slot defaults. Pass `--variant-group ppo-a` to `validate`, `plan`, `build`, `export`, `gallery`, `archive`, or `fastlane` to apply the slot selections and use `build/<scene-set>/<variant-group>/` as the default output directory:
+
+```json
+{
+  "variantGroups": [
+    {
+      "id": "baseline",
+      "name": "Baseline",
+      "selections": {
+        "hero": "device",
+        "details": "lookup"
+      }
+    },
+    {
+      "id": "ppo-a",
+      "name": "Product Page Optimization A",
+      "selections": {
+        "hero": "social-proof",
+        "details": "lookup"
+      }
+    }
+  ]
+}
+```
+
 Asset references are resolved relative to the scene set directory:
 
 ```json

@@ -27,6 +27,22 @@ export const sceneSet = defineSceneSet({
       '--gitci-color-secondary': '#14b8a6'
     }
   },
+  variantGroups: [
+    {
+      id: 'baseline',
+      name: 'Baseline',
+      selections: {
+        span: 'default'
+      }
+    },
+    {
+      id: 'ppo-a',
+      name: 'PPO A',
+      selections: {
+        span: 'concise'
+      }
+    }
+  ],
   slots: [
     {
       id: 'hero',
@@ -153,6 +169,20 @@ export const sceneSet = defineSceneSet({
             headline: 'Wide scenes stay wide',
             subheadline:
               'When a layout needs more horizontal space, the planner spans multiple screenshot slots and clips out valid uploads.',
+            screenshot: {
+              kind: 'asset',
+              path: '../../assets/iphone/inbox.svg',
+              alt: 'Example app inbox screenshot'
+            }
+          }
+        },
+        {
+          id: 'concise',
+          sceneTemplate: 'example.minimal.split-proof',
+          props: {
+            headline: 'Test wide campaign art',
+            subheadline:
+              'Named variant groups let CI export product-page experiments from the same scene set.',
             screenshot: {
               kind: 'asset',
               path: '../../assets/iphone/inbox.svg',

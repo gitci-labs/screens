@@ -60,6 +60,8 @@ public struct GalleryGenerator: Sendable {
         return manifest.targets.flatMap { target in
             target.screenshots.map { screenshot in
                 GalleryBuiltOutput(
+                    variantGroupId: manifest.sceneSet.variantGroup?.id,
+                    variantGroupName: manifest.sceneSet.variantGroup?.name,
                     localeId: screenshot.locale?.id,
                     localeName: screenshot.locale?.name,
                     targetId: target.id,
@@ -176,12 +178,17 @@ public struct GalleryGenerator: Sendable {
             """
         }.joined(separator: "\n")
         let groupedOutputs = Dictionary(grouping: builtOutputs) { output in
-            "\(output.localeId ?? "default")|\(output.targetId)"
+            "\(output.variantGroupId ?? "default")|\(output.localeId ?? "default")|\(output.targetId)"
         }
             .sorted { $0.key < $1.key }
             .map { _, outputs in
                 let first = outputs[0]
-                let heading = first.localeId.map { "\($0) / \(first.targetId)" } ?? first.targetId
+                let headingParts = [
+                    first.variantGroupName ?? first.variantGroupId,
+                    first.localeId,
+                    first.targetId
+                ].compactMap { $0 }
+                let heading = headingParts.joined(separator: " / ")
                 let displayGap = outputs.first.map { output in
                     max(6, min(40, Int(round(Double(output.displayGapPx) * 220.0 / Double(output.width)))))
                 } ?? 28
@@ -189,12 +196,16 @@ public struct GalleryGenerator: Sendable {
                     let spanLabel = output.span > 1
                         ? "<small>Span \(output.spanIndex + 1)/\(output.span), clip x=\(output.clip.x), gap=\(output.displayGapPx)</small>"
                         : "<small>Single frame, clip x=\(output.clip.x)</small>"
+                    let variantGroupLabel = output.variantGroupId.map {
+                        "<small>Variant group: \(escape($0))</small>"
+                    } ?? ""
                     return """
                     <a class="shot" href="../\(escapeAttribute(output.path))">
                       <img src="../\(escapeAttribute(output.path))" alt="\(escapeAttribute(output.path))">
                       <span><strong>\(escape(output.slotId))</strong> / \(escape(output.variantId))</span>
                       <span>\(escape(output.path))</span>
                       <small>\(String(output.width))x\(String(output.height))</small>
+                      \(variantGroupLabel)
                       \(spanLabel)
                     </a>
                     """
@@ -311,6 +322,8 @@ public struct GallerySceneSet: Codable, Equatable, Sendable {
 }
 
 public struct GalleryBuiltOutput: Codable, Equatable, Sendable {
+    public var variantGroupId: String?
+    public var variantGroupName: String?
     public var localeId: String?
     public var localeName: String?
     public var targetId: String

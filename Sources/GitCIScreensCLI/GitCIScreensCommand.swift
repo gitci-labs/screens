@@ -148,6 +148,9 @@ struct Validate: ParsableCommand {
     @Option(name: .long, help: "Apply a named scene-set variant group.")
     var variantGroup: String?
 
+    @Flag(name: .long, help: "Validate every declared scene-set variant group.")
+    var allVariantGroups = false
+
     @Flag(name: .long, help: "Treat warnings as failures.")
     var strict = false
 
@@ -156,28 +159,95 @@ struct Validate: ParsableCommand {
         let screensRoot = try ScreensRootLocator.locate(from: projectURL)
         let workspace = try ScreensWorkspace.load(root: screensRoot)
         let selectedSceneSet = try workspace.resolveSceneSet(id: sceneSet)
+
+        if allVariantGroups {
+            guard variantGroup == nil else {
+                throw ValidationError("Use either --variant-group or --all-variant-groups, not both.")
+            }
+            let groups = selectedSceneSet.manifest.variantGroups ?? []
+            guard !groups.isEmpty else {
+                throw ValidationError("Scene set \(selectedSceneSet.id) does not declare variantGroups.")
+            }
+            let reports = groups.map { group in
+                GroupValidationReport(
+                    schemaVersion: 1,
+                    sceneSetId: selectedSceneSet.id,
+                    variantGroupId: group.id,
+                    report: validate(
+                        workspace: workspace,
+                        sceneSet: selectedSceneSet,
+                        variantGroup: group.id
+                    )
+                )
+            }
+            if json {
+                let data = try JSONEncoder.gitci.encode(reports)
+                Swift.print(String(decoding: data, as: UTF8.self))
+            } else {
+                for groupReport in reports {
+                    if groupReport.report.diagnostics.isEmpty {
+                        Swift.print("status: ok (\(groupReport.variantGroupId))")
+                    } else {
+                        for diagnostic in groupReport.report.diagnostics {
+                            Swift.print("\(groupReport.variantGroupId): \(diagnostic.severity.rawValue): \(diagnostic.code): \(diagnostic.message)")
+                        }
+                    }
+                }
+            }
+
+            if reports.contains(where: { report in
+                report.report.hasErrors || (strict && !report.report.diagnostics.isEmpty)
+            }) {
+                throw ExitCode.failure
+            }
+            return
+        }
+
+        let report = validate(
+            workspace: workspace,
+            sceneSet: selectedSceneSet,
+            variantGroup: variantGroup
+        )
+        try printReport(report)
+
+        if report.hasErrors || (strict && !report.diagnostics.isEmpty) {
+            throw ExitCode.failure
+        }
+    }
+
+    private func validate(
+        workspace: ScreensWorkspace,
+        sceneSet: LoadedSceneSet,
+        variantGroup: String?
+    ) -> ValidationReport {
         let report = ProjectValidator(
             workspace: workspace,
             options: RenderPlannerOptions(
                 includePseudoLocale: pseudoLocale,
                 variantGroupID: variantGroup
             )
-        ).validate(sceneSet: selectedSceneSet)
+        ).validate(sceneSet: sceneSet)
+        return report
+    }
 
+    private func printReport(_ report: ValidationReport) throws {
         if json {
             let data = try JSONEncoder.gitci.encode(report)
-            print(String(decoding: data, as: UTF8.self))
+            Swift.print(String(decoding: data, as: UTF8.self))
         } else if report.diagnostics.isEmpty {
-            print("status: ok")
+            Swift.print("status: ok")
         } else {
             for diagnostic in report.diagnostics {
-                print("\(diagnostic.severity.rawValue): \(diagnostic.code): \(diagnostic.message)")
+                Swift.print("\(diagnostic.severity.rawValue): \(diagnostic.code): \(diagnostic.message)")
             }
         }
+    }
 
-        if report.hasErrors || (strict && !report.diagnostics.isEmpty) {
-            throw ExitCode.failure
-        }
+    private struct GroupValidationReport: Encodable {
+        var schemaVersion: Int
+        var sceneSetId: String
+        var variantGroupId: String
+        var report: ValidationReport
     }
 }
 

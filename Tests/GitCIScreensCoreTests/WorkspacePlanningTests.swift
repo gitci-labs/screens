@@ -692,6 +692,38 @@ final class WorkspacePlanningTests: XCTestCase {
         XCTAssertTrue(exported[1].outputPath.hasSuffix("ja-JP/01-appstore-iphone-6_9-portrait-hero-iphone.png"))
     }
 
+    func testGalleryIncludesBuiltOutputFilters() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+        let buildURL = root.appendingPathComponent("build")
+        let galleryURL = root.appendingPathComponent("gallery")
+        defer {
+            try? FileManager.default.removeItem(at: root)
+        }
+
+        let workspace = try ScreensWorkspace.load(root: try exampleRoot())
+        let sceneSet = try workspace.resolveSceneSet(id: "launch")
+        let plan = try RenderPlanner(workspace: workspace).makePlan(
+            sceneSet: sceneSet,
+            outputDirectory: buildURL
+        )
+        try FileManager.default.createDirectory(at: buildURL, withIntermediateDirectories: true)
+        try JSONEncoder.gitci.encode(OutputManifest(plan: plan))
+            .write(to: buildURL.appendingPathComponent("manifest.gitci-output.json"))
+
+        try GalleryGenerator(workspace: workspace).generate(
+            outputURL: galleryURL,
+            buildOutputURL: buildURL
+        )
+        let html = try String(contentsOf: galleryURL.appendingPathComponent("index.html"), encoding: .utf8)
+
+        XCTAssertTrue(html.contains("data-filter=\"target\""))
+        XCTAssertTrue(html.contains("data-target=\"appstore.iphone.6_9.portrait\""))
+        XCTAssertTrue(html.contains("data-filter=\"locale\""))
+        XCTAssertTrue(html.contains("data-filter=\"variant-group\""))
+        XCTAssertTrue(html.contains("activeFilters"))
+    }
+
     func testSpecificAppearancePatternWinsOverBroadPattern() throws {
         let root = try exampleRoot()
         let workspace = try ScreensWorkspace.load(root: root)

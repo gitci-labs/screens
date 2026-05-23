@@ -248,7 +248,36 @@ struct Build: AsyncParsableCommand {
     @Option(name: .long, help: "Apply a named scene-set variant group.")
     var variantGroup: String?
 
+    @Flag(name: .long, help: "Build every declared scene-set variant group.")
+    var allVariantGroups = false
+
     func run() async throws {
+        if allVariantGroups {
+            guard variantGroup == nil else {
+                throw ValidationError("Use either --variant-group or --all-variant-groups, not both.")
+            }
+            guard out == nil else {
+                throw ValidationError("--all-variant-groups currently uses default per-group output paths.")
+            }
+            let context = try BuildContext(
+                path: path,
+                sceneSet: sceneSet,
+                out: out,
+                includePseudoLocale: pseudoLocale
+            ).load()
+            let groups = context.sceneSet.manifest.variantGroups ?? []
+            guard !groups.isEmpty else {
+                throw ValidationError("Scene set \(context.sceneSet.id) does not declare variantGroups.")
+            }
+            for group in groups {
+                try await runOne(variantGroup: group.id)
+            }
+            return
+        }
+        try await runOne(variantGroup: variantGroup)
+    }
+
+    private func runOne(variantGroup: String?) async throws {
         let context = try BuildContext(
             path: path,
             sceneSet: sceneSet,
@@ -317,7 +346,36 @@ struct Export: AsyncParsableCommand {
     @Option(name: .long, help: "Apply a named scene-set variant group.")
     var variantGroup: String?
 
+    @Flag(name: .long, help: "Export every declared scene-set variant group.")
+    var allVariantGroups = false
+
     func run() async throws {
+        if allVariantGroups {
+            guard variantGroup == nil else {
+                throw ValidationError("Use either --variant-group or --all-variant-groups, not both.")
+            }
+            guard out == nil, archiveOut == nil, fastlaneOut == nil else {
+                throw ValidationError("--all-variant-groups currently uses default per-group output, archive, and fastlane paths.")
+            }
+            let context = try BuildContext(
+                path: path,
+                sceneSet: sceneSet,
+                out: out,
+                includePseudoLocale: pseudoLocale
+            ).load()
+            let groups = context.sceneSet.manifest.variantGroups ?? []
+            guard !groups.isEmpty else {
+                throw ValidationError("Scene set \(context.sceneSet.id) does not declare variantGroups.")
+            }
+            for group in groups {
+                try await runOne(variantGroup: group.id)
+            }
+            return
+        }
+        try await runOne(variantGroup: variantGroup)
+    }
+
+    private func runOne(variantGroup: String?) async throws {
         let context = try BuildContext(
             path: path,
             sceneSet: sceneSet,

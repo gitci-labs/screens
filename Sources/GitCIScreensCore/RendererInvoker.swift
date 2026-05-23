@@ -36,7 +36,10 @@ public struct RendererInvoker: Sendable {
         }
     }
 
-    public static func findJSWorkspace(startingAt start: URL? = nil) throws -> URL {
+    public static func findJSWorkspace(
+        startingAt start: URL? = nil,
+        executableURL: URL? = Bundle.main.executableURL
+    ) throws -> URL {
         let fm = FileManager.default
         if let override = ProcessInfo.processInfo.environment["GITCI_SCREENS_JS_WORKSPACE"] {
             let overrideURL = URL(fileURLWithPath: override).standardizedFileURL
@@ -44,9 +47,11 @@ public struct RendererInvoker: Sendable {
                 return overrideURL
             }
         }
-        let packagedURL = URL(fileURLWithPath: "/opt/gitci-screens/js")
-        if fm.fileExists(atPath: packagedURL.appendingPathComponent("package.json").path) {
-            return packagedURL
+        for root in InstallationPaths.resourceRoots(executableURL: executableURL) {
+            let candidate = root.appendingPathComponent("js")
+            if fm.fileExists(atPath: candidate.appendingPathComponent("package.json").path) {
+                return candidate.standardizedFileURL
+            }
         }
         var current = (start ?? URL(fileURLWithPath: fm.currentDirectoryPath)).standardizedFileURL
 

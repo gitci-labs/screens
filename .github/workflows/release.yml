@@ -24,9 +24,14 @@ jobs:
       - run: cd js && pnpm install --frozen-lockfile && pnpm build
       - run: swift build -c release
       - run: |
-          mkdir -p dist
-          cp .build/release/gitci-screens dist/gitci-screens-linux-x86_64
-          tar -czf dist/gitci-screens-linux-x86_64.tar.gz -C dist gitci-screens-linux-x86_64
+          package="gitci-screens-linux-x86_64"
+          mkdir -p "dist/$package/bin"
+          mkdir -p "dist/$package/share/gitci-screens"
+          cp .build/release/gitci-screens "dist/$package/bin/gitci-screens"
+          rsync -a js/ "dist/$package/share/gitci-screens/js/"
+          rsync -a templates/ "dist/$package/share/gitci-screens/templates/"
+          rsync -a schemas/ "dist/$package/share/gitci-screens/schemas/"
+          tar -czf "dist/$package.tar.gz" -C dist "$package"
       - uses: softprops/action-gh-release@v2
         with:
-          files: dist/*
+          files: dist/*.tar.gz

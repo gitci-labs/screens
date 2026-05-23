@@ -27,10 +27,11 @@ When a render plan references scene template entries, the Node renderer generate
 
 Packaged environments can set:
 
+- `GITCI_SCREENS_HOME`
 - `GITCI_SCREENS_JS_WORKSPACE`
 - `GITCI_SCREENS_TEMPLATES_ROOT`
 
-The Docker image uses these so a mounted app repo does not need to contain the renderer source.
+Release archives place the executable in `bin/` and runtime files under `share/gitci-screens/`. The CLI checks that layout automatically. The Docker image uses explicit environment variables so a mounted app repo does not need to contain the renderer source.
 
 Future renderers should keep the same plan contract:
 

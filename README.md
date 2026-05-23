@@ -52,6 +52,8 @@ By convention, a project has a `gitci/screens` directory containing `project.git
 
 Projects can declare reusable template roots in `project.gitci.json` with local `sources`; packaged installs can also provide `GITCI_SCREENS_TEMPLATES_ROOT`.
 
+Release archives use a `bin/gitci-screens` plus `share/gitci-screens` layout. The CLI also honors `GITCI_SCREENS_HOME` when you want to point a copied binary at a specific renderer/templates bundle.
+
 `init` writes a placeholder SVG screenshot so the generated project can be validated and rendered immediately. Replace `gitci/screens/assets/iphone/screenshot.svg` with a real app screenshot when you are ready.
 
 `build` writes `manifest.gitci-output.json` next to the render plan. The output manifest includes each screenshot's target dimensions plus span, span index, composite canvas, display gap, and clip rectangle metadata so galleries and future editors can reconstruct wide scenes precisely. `gallery` writes a static HTML index under the selected scene set build directory.

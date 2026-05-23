@@ -136,6 +136,29 @@ final class WorkspacePlanningTests: XCTestCase {
         XCTAssertEqual(plan.targets[2].appearance, .light)
     }
 
+    func testFindsJSWorkspaceNextToPackagedExecutable() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+        let binURL = root.appendingPathComponent("bin")
+        let jsURL = root
+            .appendingPathComponent("share")
+            .appendingPathComponent("gitci-screens")
+            .appendingPathComponent("js")
+        try FileManager.default.createDirectory(at: binURL, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: jsURL, withIntermediateDirectories: true)
+        try "{}".write(to: jsURL.appendingPathComponent("package.json"), atomically: true, encoding: .utf8)
+        defer {
+            try? FileManager.default.removeItem(at: root)
+        }
+
+        let found = try RendererInvoker.findJSWorkspace(
+            startingAt: root.appendingPathComponent("empty"),
+            executableURL: binURL.appendingPathComponent("gitci-screens")
+        )
+
+        XCTAssertEqual(found.path, jsURL.standardizedFileURL.path)
+    }
+
     private func exampleRoot() throws -> URL {
         let packageRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()

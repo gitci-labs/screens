@@ -143,9 +143,14 @@ public struct ScreensWorkspace: Sendable {
                 roots.append(overrideURL)
             }
         }
-        let packagedURL = URL(fileURLWithPath: "/opt/gitci-screens/templates/gitci/screens")
-        if fm.fileExists(atPath: packagedURL.appendingPathComponent("packs").path) {
-            roots.append(packagedURL)
+        for root in InstallationPaths.resourceRoots() {
+            let candidate = root
+                .appendingPathComponent("templates")
+                .appendingPathComponent("gitci")
+                .appendingPathComponent("screens")
+            if fm.fileExists(atPath: candidate.appendingPathComponent("packs").path) {
+                roots.append(candidate.standardizedFileURL)
+            }
         }
         var current = URL(fileURLWithPath: fm.currentDirectoryPath).standardizedFileURL
         while true {

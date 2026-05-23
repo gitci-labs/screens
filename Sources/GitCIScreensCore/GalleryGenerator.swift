@@ -58,6 +58,8 @@ public struct GalleryGenerator: Sendable {
             target.screenshots.map { screenshot in
                 GalleryBuiltOutput(
                     targetId: target.id,
+                    slotId: screenshot.slotId,
+                    variantId: screenshot.variantId,
                     path: screenshot.path,
                     width: screenshot.width,
                     height: screenshot.height,
@@ -157,6 +159,9 @@ public struct GalleryGenerator: Sendable {
         let groupedOutputs = Dictionary(grouping: builtOutputs, by: \.targetId)
             .sorted { $0.key < $1.key }
             .map { targetId, outputs in
+                let displayGap = outputs.first.map { output in
+                    max(6, min(40, Int(round(Double(output.displayGapPx) * 220.0 / Double(output.width)))))
+                } ?? 28
                 let cards = outputs.map { output in
                     let spanLabel = output.span > 1
                         ? "<small>Span \(output.spanIndex + 1)/\(output.span), clip x=\(output.clip.x), gap=\(output.displayGapPx)</small>"
@@ -164,6 +169,7 @@ public struct GalleryGenerator: Sendable {
                     return """
                     <a class="shot" href="../\(escapeAttribute(output.path))">
                       <img src="../\(escapeAttribute(output.path))" alt="\(escapeAttribute(output.path))">
+                      <span><strong>\(escape(output.slotId))</strong> / \(escape(output.variantId))</span>
                       <span>\(escape(output.path))</span>
                       <small>\(String(output.width))x\(String(output.height))</small>
                       \(spanLabel)
@@ -173,7 +179,7 @@ public struct GalleryGenerator: Sendable {
                 return """
                 <section class="target">
                   <h3>\(escape(targetId))</h3>
-                  <div class="strip">\(cards)</div>
+                  <div class="strip" style="gap: \(displayGap)px">\(cards)</div>
                 </section>
                 """
             }
@@ -280,6 +286,8 @@ public struct GallerySceneSet: Codable, Equatable, Sendable {
 
 public struct GalleryBuiltOutput: Codable, Equatable, Sendable {
     public var targetId: String
+    public var slotId: String
+    public var variantId: String
     public var path: String
     public var width: Int
     public var height: Int

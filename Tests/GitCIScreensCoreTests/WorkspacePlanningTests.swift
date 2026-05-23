@@ -156,6 +156,46 @@ final class WorkspacePlanningTests: XCTestCase {
         XCTAssertEqual(plan.targets[2].appearance, .light)
     }
 
+    func testSceneTemplateSupportedTargetsAreEnforced() throws {
+        let root = try exampleRoot()
+        var workspace = try ScreensWorkspace.load(root: root)
+        workspace.sceneTemplates["example.minimal.split-proof"]?.supportedTargets = ["appstore.iphone.*"]
+        var sceneSet = try workspace.resolveSceneSet(id: "launch")
+        sceneSet.manifest.targets = ["appstore.mac.16_10"]
+        sceneSet.manifest.slots = [
+            SceneSlot(
+                id: "unsupported",
+                label: nil,
+                selectedVariant: nil,
+                variants: [
+                    SceneVariant(
+                        id: "iphone-only",
+                        sceneTemplate: "example.minimal.split-proof",
+                        includeTargets: nil,
+                        excludeTargets: nil,
+                        props: .object([
+                            "headline": .string("Unsupported"),
+                            "screenshot": .object([
+                                "kind": .string("asset"),
+                                "path": .string("../../assets/iphone/inbox.svg")
+                            ])
+                        ])
+                    )
+                ]
+            )
+        ]
+
+        XCTAssertThrowsError(try RenderPlanner(workspace: workspace).makePlan(
+            sceneSet: sceneSet,
+            outputDirectory: root.appendingPathComponent("build/test")
+        )) { error in
+            XCTAssertEqual(
+                String(describing: error),
+                "Scene template example.minimal.split-proof does not support target appstore.mac.16_10."
+            )
+        }
+    }
+
     func testFindsJSWorkspaceNextToPackagedExecutable() throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)

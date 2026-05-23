@@ -43,6 +43,7 @@ public struct RenderPlanner: Sendable {
                 guard let template = workspace.sceneTemplates[variant.sceneTemplate] else {
                     throw ScreensError.unknownSceneTemplate(variant.sceneTemplate)
                 }
+                try validateSupportedTarget(template: template, targetID: targetID)
                 try validateRequiredProps(template: template, props: variant.props)
                 usedSceneTemplateIDs.insert(template.id)
 
@@ -166,6 +167,15 @@ public struct RenderPlanner: Sendable {
         let object = props.objectValue ?? [:]
         for requiredProp in template.requiredProps where object[requiredProp] == nil {
             throw ScreensError.missingRequiredProp(templateID: template.id, prop: requiredProp)
+        }
+    }
+
+    private func validateSupportedTarget(template: SceneTemplateRecord, targetID: String) throws {
+        guard let supportedTargets = template.supportedTargets, !supportedTargets.isEmpty else {
+            return
+        }
+        guard supportedTargets.contains(where: { Self.matches(pattern: $0, value: targetID) }) else {
+            throw ScreensError.unsupportedTemplateTarget(templateID: template.id, targetID: targetID)
         }
     }
 

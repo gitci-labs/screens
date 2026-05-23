@@ -209,6 +209,7 @@ public struct ScreensWorkspace: Sendable {
                 requiredProps: requiredProps(from: manifest.propsSchema),
                 pack: manifest.pack,
                 tags: manifest.tags,
+                supportedTargets: manifest.supportedTargets,
                 entry: manifest.entry,
                 exportName: manifest.export,
                 resolvedEntry: resolvedEntry(from: manifest.entry, manifestURL: manifestURL)

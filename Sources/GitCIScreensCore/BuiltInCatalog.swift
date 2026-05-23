@@ -7,6 +7,7 @@ public struct SceneTemplateRecord: Codable, Equatable, Sendable {
     public var requiredProps: [String]
     public var pack: String?
     public var tags: [String]?
+    public var supportedTargets: [String]?
     public var entry: String?
     public var exportName: String?
     public var resolvedEntry: String?
@@ -83,6 +84,7 @@ public enum BuiltInCatalog {
             requiredProps: ["headline", "screenshot"],
             pack: "gitci.core",
             tags: ["hero", "device", "headline"],
+            supportedTargets: ["appstore.iphone.*", "appstore.ipad.*", "appstore.mac.*"],
             entry: "@gitci/screens-templates-core",
             exportName: "HeroDeviceScene",
             resolvedEntry: "@gitci/screens-templates-core"
@@ -94,6 +96,7 @@ public enum BuiltInCatalog {
             requiredProps: ["headline", "screenshot"],
             pack: "gitci.core",
             tags: ["feature", "device", "detail"],
+            supportedTargets: ["appstore.iphone.*", "appstore.ipad.*", "appstore.mac.*"],
             entry: "@gitci/screens-templates-core",
             exportName: "FeatureCloseupScene",
             resolvedEntry: "@gitci/screens-templates-core"

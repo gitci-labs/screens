@@ -15,6 +15,7 @@ public enum ScreensError: Error, CustomStringConvertible, Equatable {
     case missingVariant(slotID: String, variantID: String)
     case noVariant(slotID: String)
     case missingRequiredProp(templateID: String, prop: String)
+    case unsupportedTemplateTarget(templateID: String, targetID: String)
     case invalidTemplateEntry(String)
     case assetNotFound(String)
     case remoteAssetDisabled(String)
@@ -55,6 +56,8 @@ public enum ScreensError: Error, CustomStringConvertible, Equatable {
             return "Slot \(slotID) does not contain any variants."
         case let .missingRequiredProp(templateID, prop):
             return "Scene template \(templateID) requires prop \(prop)."
+        case let .unsupportedTemplateTarget(templateID, targetID):
+            return "Scene template \(templateID) does not support target \(targetID)."
         case let .invalidTemplateEntry(id):
             return "Scene template \(id) must declare both entry and export for rendering."
         case let .assetNotFound(path):

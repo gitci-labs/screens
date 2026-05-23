@@ -9,6 +9,7 @@ swift test
 swift build
 cd js && pnpm install && pnpm build && cd ..
 .build/debug/gitci-screens build examples/minimal
+python3 scripts/check-png-size.py examples/minimal/gitci/screens/build/launch/appstore.iphone.6_9.portrait/01-hero.png 1320 2868
 ```
 
 The renderer installs Playwright Chromium on first render if it is not already cached.

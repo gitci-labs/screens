@@ -11,6 +11,7 @@ public struct ProjectDiagnostic: Codable, Equatable, Sendable {
     public var message: String
     public var targetId: String?
     public var outputPath: String?
+    public var assetPath: String?
     public var sourceId: String?
 
     public init(
@@ -19,6 +20,7 @@ public struct ProjectDiagnostic: Codable, Equatable, Sendable {
         message: String,
         targetId: String? = nil,
         outputPath: String? = nil,
+        assetPath: String? = nil,
         sourceId: String? = nil
     ) {
         self.severity = severity
@@ -26,6 +28,7 @@ public struct ProjectDiagnostic: Codable, Equatable, Sendable {
         self.message = message
         self.targetId = targetId
         self.outputPath = outputPath
+        self.assetPath = assetPath
         self.sourceId = sourceId
     }
 }
@@ -58,11 +61,7 @@ public struct ProjectValidator: Sendable {
             diagnostics.append(contentsOf: warnings(for: plan))
             diagnostics.append(contentsOf: warningsForProjectSources())
         } catch {
-            diagnostics.append(ProjectDiagnostic(
-                severity: .error,
-                code: "planning.failed",
-                message: String(describing: error)
-            ))
+            diagnostics.append(Self.diagnostic(for: error))
         }
 
         return ValidationReport(
@@ -119,5 +118,74 @@ public struct ProjectValidator: Sendable {
             return true
         }
         return profile.acceptedSizes.contains([target.width, target.height])
+    }
+
+    private static func diagnostic(for error: Error) -> ProjectDiagnostic {
+        guard let screensError = error as? ScreensError else {
+            return ProjectDiagnostic(
+                severity: .error,
+                code: "planning.failed",
+                message: String(describing: error)
+            )
+        }
+
+        switch screensError {
+        case let .unknownTarget(targetID):
+            return ProjectDiagnostic(
+                severity: .error,
+                code: "target.unknown",
+                message: screensError.description,
+                targetId: targetID
+            )
+        case let .assetNotFound(path):
+            return ProjectDiagnostic(
+                severity: .error,
+                code: "asset.not-found",
+                message: screensError.description,
+                assetPath: path
+            )
+        case let .remoteAssetDisabled(url):
+            return ProjectDiagnostic(
+                severity: .error,
+                code: "asset.remote-disabled",
+                message: screensError.description,
+                assetPath: url
+            )
+        case let .templateSourceNotFound(sourceID, path):
+            return ProjectDiagnostic(
+                severity: .error,
+                code: "project.source-not-found",
+                message: screensError.description,
+                outputPath: path,
+                sourceId: sourceID
+            )
+        case let .projectSourceMissingPath(sourceID):
+            return ProjectDiagnostic(
+                severity: .error,
+                code: "project.source-missing-path",
+                message: screensError.description,
+                sourceId: sourceID
+            )
+        case let .noOutputs(targetID):
+            return ProjectDiagnostic(
+                severity: .error,
+                code: "target.no-outputs",
+                message: screensError.description,
+                targetId: targetID
+            )
+        case let .tooManyOutputs(targetID, _, _):
+            return ProjectDiagnostic(
+                severity: .error,
+                code: "target.too-many-outputs",
+                message: screensError.description,
+                targetId: targetID
+            )
+        default:
+            return ProjectDiagnostic(
+                severity: .error,
+                code: "planning.failed",
+                message: screensError.description
+            )
+        }
     }
 }

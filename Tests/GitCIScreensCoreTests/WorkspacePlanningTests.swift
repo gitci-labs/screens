@@ -101,6 +101,56 @@ final class WorkspacePlanningTests: XCTestCase {
         XCTAssertFalse(report.diagnostics.contains { $0.code == "project.source-unsupported" })
     }
 
+    func testValidationReportsMissingAssetsDirectly() throws {
+        let root = try exampleRoot()
+        let workspace = try ScreensWorkspace.load(root: root)
+        var sceneSet = try workspace.resolveSceneSet(id: "launch")
+        sceneSet.manifest.targets = ["appstore.iphone.6_9.portrait"]
+        sceneSet.manifest.slots[0].variants[0].props = .object([
+            "headline": .string("Missing screenshot"),
+            "screenshot": .object([
+                "kind": .string("asset"),
+                "path": .string("../../assets/iphone/does-not-exist.svg")
+            ])
+        ])
+
+        let report = ProjectValidator(workspace: workspace).validate(sceneSet: sceneSet)
+        let diagnostic = try XCTUnwrap(report.diagnostics.first)
+
+        XCTAssertTrue(report.hasErrors)
+        XCTAssertEqual(diagnostic.code, "asset.not-found")
+        XCTAssertTrue(diagnostic.assetPath?.hasSuffix("does-not-exist.svg") == true)
+    }
+
+    func testValidationReportsRemoteAssetsWhenDisabled() throws {
+        let root = try exampleRoot()
+        var workspace = try ScreensWorkspace.load(root: root)
+        workspace.project = ProjectManifest(
+            schemaVersion: 1,
+            id: "com.example",
+            name: "Example",
+            sources: nil,
+            defaultSceneSet: "launch",
+            assetPolicy: AssetPolicy(allowRemoteAssets: false)
+        )
+        var sceneSet = try workspace.resolveSceneSet(id: "launch")
+        sceneSet.manifest.targets = ["appstore.iphone.6_9.portrait"]
+        sceneSet.manifest.slots[0].variants[0].props = .object([
+            "headline": .string("Remote screenshot"),
+            "screenshot": .object([
+                "kind": .string("asset"),
+                "path": .string("https://example.com/screenshot.png")
+            ])
+        ])
+
+        let report = ProjectValidator(workspace: workspace).validate(sceneSet: sceneSet)
+        let diagnostic = try XCTUnwrap(report.diagnostics.first)
+
+        XCTAssertTrue(report.hasErrors)
+        XCTAssertEqual(diagnostic.code, "asset.remote-disabled")
+        XCTAssertEqual(diagnostic.assetPath, "https://example.com/screenshot.png")
+    }
+
     func testOutputManifestCarriesSpanClipMetadata() throws {
         let root = try exampleRoot()
         let workspace = try ScreensWorkspace.load(root: root)

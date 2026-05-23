@@ -4,7 +4,7 @@
   "id": "gitci.core.hero-device",
   "name": "Hero Device",
   "pack": "gitci.core",
-  "entry": "@gitci/screens-templates-core",
+  "entry": "./template.tsx",
   "export": "HeroDeviceScene",
   "tags": ["hero", "device", "headline"],
   "minAspectRatio": 0.42,

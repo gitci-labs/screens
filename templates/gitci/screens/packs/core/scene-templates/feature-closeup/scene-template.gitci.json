@@ -4,7 +4,7 @@
   "id": "gitci.core.feature-closeup",
   "name": "Feature Closeup",
   "pack": "gitci.core",
-  "entry": "@gitci/screens-templates-core",
+  "entry": "./template.tsx",
   "export": "FeatureCloseupScene",
   "tags": ["feature", "device", "detail"],
   "minAspectRatio": 0.42,

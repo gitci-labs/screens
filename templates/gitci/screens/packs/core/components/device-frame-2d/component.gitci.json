@@ -4,7 +4,7 @@
   "id": "gitci.core.device-frame-2d",
   "name": "Device Frame 2D",
   "pack": "gitci.core",
-  "entry": "@gitci/screens-templates-core",
+  "entry": "./DeviceFrame2D.tsx",
   "export": "DeviceFrame2D",
   "category": "device-frames",
   "tags": ["device", "frame", "2d"],

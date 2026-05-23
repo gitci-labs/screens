@@ -22,16 +22,19 @@ public struct FastlaneScreenshotsExporter: Sendable {
 
         var exported: [FastlaneScreenshot] = []
         for target in manifest.targets {
-            for (index, screenshot) in target.screenshots.enumerated() {
+            var ordinalsByLocale: [String: Int] = [:]
+            for screenshot in target.screenshots {
                 let sourceURL = buildOutputURL.appendingPathComponent(screenshot.path)
                 guard FileManager.default.fileExists(atPath: sourceURL.path) else {
                     throw ScreensError.assetNotFound(sourceURL.path)
                 }
                 let localeID = screenshot.locale?.id ?? defaultLocale
+                let ordinal = (ordinalsByLocale[localeID] ?? 0) + 1
+                ordinalsByLocale[localeID] = ordinal
                 let localeDirectoryURL = outputURL.appendingPathComponent(Self.pathComponent(localeID))
                 try FileManager.default.createDirectory(at: localeDirectoryURL, withIntermediateDirectories: true)
 
-                let filename = Self.filename(targetID: target.id, screenshot: screenshot, ordinal: index + 1)
+                let filename = Self.filename(targetID: target.id, screenshot: screenshot, ordinal: ordinal)
                 let destinationURL = localeDirectoryURL.appendingPathComponent(filename)
                 try? FileManager.default.removeItem(at: destinationURL)
                 try FileManager.default.copyItem(at: sourceURL, to: destinationURL)

@@ -1285,6 +1285,7 @@ private struct LoadedBuildContext {
     var plan: RenderPlan
 
     func writePlan() throws {
+        try? FileManager.default.removeItem(at: outputURL)
         try FileManager.default.createDirectory(at: outputURL, withIntermediateDirectories: true)
         try JSONEncoder.gitci.encode(plan).write(to: planURL)
     }

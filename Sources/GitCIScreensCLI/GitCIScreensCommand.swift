@@ -27,16 +27,30 @@ struct Doctor: ParsableCommand {
     @Argument(help: "Project path. Defaults to current directory.")
     var path: String = "."
 
+    @Flag(name: .long, help: "Print JSON.")
+    var json = false
+
     func run() throws {
         let projectURL = URL(fileURLWithPath: path).standardizedFileURL
         let screensRoot = try ScreensRootLocator.locate(from: projectURL)
         _ = try ScreensWorkspace.load(root: screensRoot)
         let jsWorkspace = try RendererInvoker.findJSWorkspace()
         try RendererInvoker.verifyNodePlaywrightRenderer(jsWorkspace: jsWorkspace)
-        print("screens root: \(screensRoot.path)")
-        print("js workspace: \(jsWorkspace.path)")
-        print("renderer: node-playwright")
-        print("status: ok")
+        let summary = DoctorSummary(
+            status: "ok",
+            screensRoot: screensRoot.path,
+            jsWorkspace: jsWorkspace.path,
+            renderer: "node-playwright"
+        )
+        if json {
+            let data = try JSONEncoder.gitci.encode(summary)
+            print(String(decoding: data, as: UTF8.self))
+        } else {
+            print("screens root: \(summary.screensRoot)")
+            print("js workspace: \(summary.jsWorkspace)")
+            print("renderer: \(summary.renderer)")
+            print("status: \(summary.status)")
+        }
     }
 }
 
@@ -413,6 +427,13 @@ private struct DiscoverySummary: Codable {
 private struct DiscoverySceneSet: Codable {
     var id: String
     var name: String?
+}
+
+private struct DoctorSummary: Codable {
+    var status: String
+    var screensRoot: String
+    var jsWorkspace: String
+    var renderer: String
 }
 
 private func printError(_ value: String) {

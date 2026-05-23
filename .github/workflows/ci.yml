@@ -49,6 +49,7 @@ jobs:
       - run: cd js && pnpm --filter @gitci/screens-renderer-node exec playwright install --with-deps chromium
       - run: swift build
       - run: .build/debug/gitci-screens doctor examples/minimal
+      - run: .build/debug/gitci-screens doctor examples/minimal --json
       - run: .build/debug/gitci-screens validate examples/minimal
       - run: .build/debug/gitci-screens build examples/minimal
       - run: .build/debug/gitci-screens gallery examples/minimal

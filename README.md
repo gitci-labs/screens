@@ -33,6 +33,7 @@ The current built-in App Store targets are:
 
 ```sh
 .build/debug/gitci-screens doctor examples/minimal
+.build/debug/gitci-screens doctor examples/minimal --json
 .build/debug/gitci-screens discover examples/minimal --json
 .build/debug/gitci-screens validate examples/minimal
 .build/debug/gitci-screens plan examples/minimal --scene-set launch

@@ -75,6 +75,15 @@ Not implemented yet:
 - native SwiftUI app
 - browser/WASM build
 
+## Repo Map
+
+- [`gitci-labs/screens`](https://github.com/gitci-labs/screens): CLI, Swift core, JS renderer, schemas, Docker, CI, and bundled bootstrap templates.
+- [`gitci-labs/screens-templates`](https://github.com/gitci-labs/screens-templates): canonical reusable template packs and target definitions.
+- [`gitci-labs/screens-demos`](https://github.com/gitci-labs/screens-demos): public demo projects with fake screenshots.
+- `gitci-labs/gitci-dev`: private meta repo with submodules and product specs.
+- `gitci-labs/screens-app`: private native Apple app.
+- `gitci-labs/screens-internal-assets`: private asset storage.
+
 ## References
 
 - [Architecture](docs/architecture.md)

@@ -60,7 +60,13 @@ public struct GalleryGenerator: Sendable {
                     targetId: target.id,
                     path: screenshot.path,
                     width: screenshot.width,
-                    height: screenshot.height
+                    height: screenshot.height,
+                    displayGapPx: target.displayGapPx,
+                    span: screenshot.span,
+                    spanIndex: screenshot.spanIndex,
+                    compositeWidth: screenshot.compositeWidth,
+                    compositeHeight: screenshot.compositeHeight,
+                    clip: screenshot.clip
                 )
             }
         }
@@ -152,11 +158,15 @@ public struct GalleryGenerator: Sendable {
             .sorted { $0.key < $1.key }
             .map { targetId, outputs in
                 let cards = outputs.map { output in
-                    """
+                    let spanLabel = output.span > 1
+                        ? "<small>Span \(output.spanIndex + 1)/\(output.span), clip x=\(output.clip.x), gap=\(output.displayGapPx)</small>"
+                        : "<small>Single frame, clip x=\(output.clip.x)</small>"
+                    return """
                     <a class="shot" href="../\(escapeAttribute(output.path))">
                       <img src="../\(escapeAttribute(output.path))" alt="\(escapeAttribute(output.path))">
                       <span>\(escape(output.path))</span>
                       <small>\(String(output.width))x\(String(output.height))</small>
+                      \(spanLabel)
                     </a>
                     """
                 }.joined(separator: "\n")
@@ -273,4 +283,10 @@ public struct GalleryBuiltOutput: Codable, Equatable, Sendable {
     public var path: String
     public var width: Int
     public var height: Int
+    public var displayGapPx: Int
+    public var span: Int
+    public var spanIndex: Int
+    public var compositeWidth: Int
+    public var compositeHeight: Int
+    public var clip: ClipRect
 }

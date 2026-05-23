@@ -42,15 +42,15 @@ gitci-screens scene-sets fill-assets . \
 ## 4. Validate
 
 ```sh
-gitci-screens validate . --scene-set launch
+gitci-screens validate . --scene-set launch --strict
 ```
 
-Use `--json` in CI or editor integrations.
+Use `--json` in CI or editor integrations. Use `--strict` when warnings, such as a first-three screenshot missing headline text, should fail the run.
 
 ## 5. Export
 
 ```sh
-gitci-screens export . --scene-set launch
+gitci-screens export . --scene-set launch --strict
 ```
 
 Outputs land under:

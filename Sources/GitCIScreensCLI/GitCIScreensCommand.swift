@@ -141,6 +141,9 @@ struct Validate: ParsableCommand {
     @Flag(name: .long, help: "Print JSON.")
     var json = false
 
+    @Flag(name: .long, help: "Treat warnings as failures.")
+    var strict = false
+
     func run() throws {
         let projectURL = URL(fileURLWithPath: path).standardizedFileURL
         let screensRoot = try ScreensRootLocator.locate(from: projectURL)
@@ -159,7 +162,7 @@ struct Validate: ParsableCommand {
             }
         }
 
-        if report.hasErrors {
+        if report.hasErrors || (strict && !report.diagnostics.isEmpty) {
             throw ExitCode.failure
         }
     }
@@ -211,13 +214,16 @@ struct Build: AsyncParsableCommand {
     @Option(name: .long, help: "Renderer backend.")
     var renderer: String = "node-playwright"
 
+    @Flag(name: .long, help: "Treat validation warnings as failures.")
+    var strict = false
+
     func run() async throws {
         let context = try BuildContext(path: path, sceneSet: sceneSet, out: out).load()
         let report = ProjectValidator(workspace: context.workspace).validate(sceneSet: context.sceneSet)
         for diagnostic in report.diagnostics {
             printError("\(diagnostic.severity.rawValue): \(diagnostic.code): \(diagnostic.message)")
         }
-        if report.hasErrors {
+        if report.hasErrors || (strict && !report.diagnostics.isEmpty) {
             throw ExitCode.failure
         }
         try context.writePlan()
@@ -253,13 +259,16 @@ struct Export: AsyncParsableCommand {
     @Flag(name: .long, help: "Do not package a zip archive.")
     var skipArchive = false
 
+    @Flag(name: .long, help: "Treat validation warnings as failures.")
+    var strict = false
+
     func run() async throws {
         let context = try BuildContext(path: path, sceneSet: sceneSet, out: out).load()
         let report = ProjectValidator(workspace: context.workspace).validate(sceneSet: context.sceneSet)
         for diagnostic in report.diagnostics {
             printError("\(diagnostic.severity.rawValue): \(diagnostic.code): \(diagnostic.message)")
         }
-        if report.hasErrors {
+        if report.hasErrors || (strict && !report.diagnostics.isEmpty) {
             throw ExitCode.failure
         }
 
@@ -515,7 +524,7 @@ struct Init: ParsableCommand {
                     runs-on: ubuntu-latest
                     steps:
                       - uses: actions/checkout@v4
-                      - run: docker run --rm -v "$PWD":/workspace ghcr.io/gitci-labs/screens:main export /workspace
+                      - run: docker run --rm -v "$PWD":/workspace ghcr.io/gitci-labs/screens:main export /workspace --strict
                       - uses: actions/upload-artifact@v4
                         with:
                           name: gitci-screens

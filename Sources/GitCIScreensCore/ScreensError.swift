@@ -19,6 +19,7 @@ public enum ScreensError: Error, CustomStringConvertible, Equatable {
     case invalidTemplateEntry(String)
     case assetNotFound(String)
     case remoteAssetDisabled(String)
+    case noOutputs(targetID: String)
     case tooManyOutputs(targetID: String, count: Int, max: Int)
     case outputCollision(String)
     case unsupportedRenderer(String)
@@ -64,6 +65,8 @@ public enum ScreensError: Error, CustomStringConvertible, Equatable {
             return "Asset not found: \(path)."
         case let .remoteAssetDisabled(url):
             return "Remote assets are disabled, but found \(url)."
+        case let .noOutputs(targetID):
+            return "Target \(targetID) would not produce any screenshots."
         case let .tooManyOutputs(targetID, count, max):
             return "Target \(targetID) would produce \(count) screenshots, above max \(max)."
         case let .outputCollision(path):

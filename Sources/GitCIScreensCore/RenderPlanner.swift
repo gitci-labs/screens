@@ -81,7 +81,10 @@ public struct RenderPlanner: Sendable {
                 }
             }
 
-            guard (1...target.maxScreenshots).contains(outputs.count) else {
+            guard !outputs.isEmpty else {
+                throw ScreensError.noOutputs(targetID: target.id)
+            }
+            guard outputs.count <= target.maxScreenshots else {
                 throw ScreensError.tooManyOutputs(
                     targetID: target.id,
                     count: outputs.count,

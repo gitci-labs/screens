@@ -196,6 +196,45 @@ final class WorkspacePlanningTests: XCTestCase {
         }
     }
 
+    func testPlannerFailsClearlyWhenTargetHasNoOutputs() throws {
+        let root = try exampleRoot()
+        let workspace = try ScreensWorkspace.load(root: root)
+        var sceneSet = try workspace.resolveSceneSet(id: "launch")
+        sceneSet.manifest.targets = ["appstore.mac.16_10"]
+        sceneSet.manifest.slots = [
+            SceneSlot(
+                id: "iphone-only",
+                label: nil,
+                selectedVariant: nil,
+                variants: [
+                    SceneVariant(
+                        id: "iphone",
+                        sceneTemplate: "gitci.core.hero-device",
+                        includeTargets: ["appstore.iphone.*"],
+                        excludeTargets: nil,
+                        props: .object([
+                            "headline": .string("iPhone only"),
+                            "screenshot": .object([
+                                "kind": .string("asset"),
+                                "path": .string("../../assets/iphone/inbox.svg")
+                            ])
+                        ])
+                    )
+                ]
+            )
+        ]
+
+        XCTAssertThrowsError(try RenderPlanner(workspace: workspace).makePlan(
+            sceneSet: sceneSet,
+            outputDirectory: root.appendingPathComponent("build/test")
+        )) { error in
+            XCTAssertEqual(
+                String(describing: error),
+                "Target appstore.mac.16_10 would not produce any screenshots."
+            )
+        }
+    }
+
     func testFindsJSWorkspaceNextToPackagedExecutable() throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)

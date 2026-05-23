@@ -294,7 +294,7 @@ struct Init: ParsableCommand {
                         "subheadline": "A short supporting line.",
                         "screenshot": {
                           "kind": "asset",
-                          "path": "../../assets/iphone/screenshot.png"
+                          "path": "../../assets/iphone/screenshot.svg"
                         },
                         "device": "iphone-2d"
                       }
@@ -303,6 +303,20 @@ struct Init: ParsableCommand {
                 }
               ]
             }
+            """
+        )
+        try writeIfMissing(
+            url: assetRoot.appendingPathComponent("screenshot.svg"),
+            contents: """
+            <svg xmlns="http://www.w3.org/2000/svg" width="390" height="844" viewBox="0 0 390 844">
+              <rect width="390" height="844" rx="42" fill="#F8FAFC"/>
+              <rect x="32" y="72" width="150" height="24" rx="12" fill="#CBD5E1"/>
+              <text x="32" y="154" fill="#111827" font-family="Arial, Helvetica, sans-serif" font-size="38" font-weight="700">Screenshot</text>
+              <rect x="32" y="210" width="326" height="112" rx="28" fill="#DBEAFE"/>
+              <rect x="32" y="350" width="326" height="112" rx="28" fill="#CCFBF1"/>
+              <rect x="32" y="490" width="326" height="112" rx="28" fill="#FFEDD5"/>
+              <rect x="32" y="656" width="326" height="92" rx="28" fill="#0F172A"/>
+            </svg>
             """
         )
         print(screensRoot.path)

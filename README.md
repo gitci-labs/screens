@@ -41,6 +41,7 @@ The current built-in App Store targets are:
 .build/debug/gitci-screens build examples/minimal --scene-set launch
 .build/debug/gitci-screens gallery examples/minimal --scene-set launch
 .build/debug/gitci-screens init path/to/my-app --name "My App"
+.build/debug/gitci-screens templates install --repo gitci-labs/screens-templates --version v0.1.0 --archive path/to/screens-templates-v0.1.0.tar.gz
 ```
 
 You can also run the packaged Docker image once it has been published:
@@ -54,6 +55,8 @@ By convention, a project has a `gitci/screens` directory containing `project.git
 Projects can declare reusable template roots in `project.gitci.json` with local `sources`; packaged installs can also provide `GITCI_SCREENS_TEMPLATES_ROOT`.
 
 Release archives use a `bin/gitci-screens` plus `share/gitci-screens` layout. The CLI also honors `GITCI_SCREENS_HOME` when you want to point a copied binary at a specific renderer/templates bundle.
+
+Template releases can be cached with `templates install`. By default it stores archives under `~/.gitci/screens/templates/<repo-name>/<version>/`, which matches `githubRelease` source discovery. Use `GITCI_SCREENS_TEMPLATE_CACHE_ROOT` to point both install and discovery at another cache directory.
 
 To build the release archive layout locally:
 

@@ -51,6 +51,18 @@ jobs:
       - run: .build/debug/gitci-screens doctor examples/minimal
       - run: .build/debug/gitci-screens doctor examples/minimal --json
       - run: .build/debug/gitci-screens validate examples/minimal
+      - run: |
+          tmpdir="$(mktemp -d)"
+          package="screens-templates-v0.0.0"
+          mkdir -p "$tmpdir/$package"
+          rsync -a templates/gitci "$tmpdir/$package/"
+          tar -czf "$tmpdir/$package.tar.gz" -C "$tmpdir" "$package"
+          .build/debug/gitci-screens templates install \
+            --repo gitci-labs/screens-templates \
+            --version v0.0.0 \
+            --archive "$tmpdir/$package.tar.gz" \
+            --cache-root "$tmpdir/cache"
+          test -d "$tmpdir/cache/screens-templates/v0.0.0/gitci/screens/packs"
       - run: .build/debug/gitci-screens build examples/minimal
       - run: .build/debug/gitci-screens gallery examples/minimal
       - run: |

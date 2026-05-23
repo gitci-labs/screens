@@ -281,12 +281,15 @@ final class WorkspacePlanningTests: XCTestCase {
             try? FileManager.default.removeItem(at: home)
         }
 
-        let candidates = ScreensWorkspace.cachedTemplateCandidates(home: home, project: project)
+        let candidates = ScreensWorkspace.cachedTemplateCandidates(
+            cacheRoot: home.appendingPathComponent("cache"),
+            project: project
+        )
 
         XCTAssertEqual(
             candidates.first?.path,
             home
-                .appendingPathComponent(".gitci/screens/templates/screens-templates/v0.1.0/gitci/screens")
+                .appendingPathComponent("cache/screens-templates/v0.1.0/gitci/screens")
                 .standardizedFileURL
                 .path
         )

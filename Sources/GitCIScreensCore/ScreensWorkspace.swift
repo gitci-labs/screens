@@ -115,7 +115,7 @@ public struct ScreensWorkspace: Sendable {
             }
             roots.append(sourceURL)
         }
-        for candidate in cachedTemplateCandidates(home: fm.homeDirectoryForCurrentUser, project: project) {
+        for candidate in cachedTemplateCandidates(cacheRoot: templateCacheRoot(home: fm.homeDirectoryForCurrentUser), project: project) {
             if fm.fileExists(atPath: candidate.appendingPathComponent("packs").path) {
                 roots.append(candidate)
             }
@@ -158,10 +158,11 @@ public struct ScreensWorkspace: Sendable {
     }
 
     public static func cachedTemplateCandidates(home: URL, project: ProjectManifest?) -> [URL] {
-        let templatesRoot = home
-            .appendingPathComponent(".gitci")
-            .appendingPathComponent("screens")
-            .appendingPathComponent("templates")
+        cachedTemplateCandidates(cacheRoot: defaultTemplateCacheRoot(home: home), project: project)
+    }
+
+    public static func cachedTemplateCandidates(cacheRoot templatesRoot: URL, project: ProjectManifest?) -> [URL] {
+        let templatesRoot = templatesRoot.standardizedFileURL
         var candidates: [URL] = []
 
         for source in project?.sources ?? [] where source.kind == "githubRelease" {
@@ -199,6 +200,20 @@ public struct ScreensWorkspace: Sendable {
         return candidates.map(\.standardizedFileURL).filter { candidate in
             seen.insert(candidate.path).inserted
         }
+    }
+
+    private static func templateCacheRoot(home: URL) -> URL {
+        if let override = ProcessInfo.processInfo.environment["GITCI_SCREENS_TEMPLATE_CACHE_ROOT"], !override.isEmpty {
+            return URL(fileURLWithPath: override).standardizedFileURL
+        }
+        return defaultTemplateCacheRoot(home: home)
+    }
+
+    private static func defaultTemplateCacheRoot(home: URL) -> URL {
+        home
+            .appendingPathComponent(".gitci")
+            .appendingPathComponent("screens")
+            .appendingPathComponent("templates")
     }
 
     private static func mergeTemplateRoot(_ root: URL, into catalog: inout TemplateCatalog) throws {

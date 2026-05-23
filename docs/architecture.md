@@ -29,6 +29,7 @@ Packaged environments can set:
 
 - `GITCI_SCREENS_HOME`
 - `GITCI_SCREENS_JS_WORKSPACE`
+- `GITCI_SCREENS_TEMPLATE_CACHE_ROOT`
 - `GITCI_SCREENS_TEMPLATES_ROOT`
 
 Release archives place the executable in `bin/` and runtime files under `share/gitci-screens/`. The CLI checks that layout automatically. The Docker image uses explicit environment variables so a mounted app repo does not need to contain the renderer source.

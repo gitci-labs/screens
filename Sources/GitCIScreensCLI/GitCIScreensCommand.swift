@@ -1,6 +1,9 @@
 import ArgumentParser
 import Foundation
 import GitCIScreensCore
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 
 @main
 struct GitCIScreensCommand: AsyncParsableCommand {
@@ -14,7 +17,8 @@ struct GitCIScreensCommand: AsyncParsableCommand {
             Plan.self,
             Build.self,
             Gallery.self,
-            Init.self
+            Init.self,
+            Templates.self
         ]
     )
 }
@@ -357,6 +361,155 @@ struct Init: ParsableCommand {
         value
             .replacingOccurrences(of: "\\", with: "\\\\")
             .replacingOccurrences(of: "\"", with: "\\\"")
+    }
+}
+
+struct Templates: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "templates",
+        abstract: "Manage cached GitCI Screens template releases.",
+        subcommands: [
+            Install.self
+        ]
+    )
+
+    struct Install: AsyncParsableCommand {
+        static let configuration = CommandConfiguration(
+            abstract: "Install a template release archive into the local cache."
+        )
+
+        @Option(name: .long, help: "GitHub repository, for example gitci-labs/screens-templates.")
+        var repo: String = "gitci-labs/screens-templates"
+
+        @Option(name: .long, help: "Release version or tag, for example v0.1.0.")
+        var version: String
+
+        @Option(name: .long, help: "Local release archive path. If omitted, the archive is downloaded from GitHub Releases.")
+        var archive: String?
+
+        @Option(name: .long, help: "Template cache root. Defaults to ~/.gitci/screens/templates.")
+        var cacheRoot: String?
+
+        func run() async throws {
+            let archiveURL: URL
+            if let archive {
+                archiveURL = URL(fileURLWithPath: archive).standardizedFileURL
+            } else {
+                archiveURL = try await Self.downloadArchive(repo: repo, version: version)
+            }
+
+            let installedURL = try TemplateArchiveInstaller.install(
+                archiveURL: archiveURL,
+                repo: repo,
+                version: version,
+                cacheRoot: Self.resolvedCacheRoot(cacheRoot)
+            )
+            print(installedURL.path)
+        }
+
+        private static func resolvedCacheRoot(_ cacheRoot: String?) -> URL {
+            if let cacheRoot {
+                return URL(fileURLWithPath: cacheRoot).standardizedFileURL
+            }
+            if let override = ProcessInfo.processInfo.environment["GITCI_SCREENS_TEMPLATE_CACHE_ROOT"], !override.isEmpty {
+                return URL(fileURLWithPath: override).standardizedFileURL
+            }
+            return FileManager.default.homeDirectoryForCurrentUser
+                .appendingPathComponent(".gitci")
+                .appendingPathComponent("screens")
+                .appendingPathComponent("templates")
+                .standardizedFileURL
+        }
+
+        private static func downloadArchive(repo: String, version: String) async throws -> URL {
+            let repositoryName = try TemplateArchiveInstaller.repositoryName(repo)
+            let archiveName = "\(repositoryName)-\(version).tar.gz"
+            guard let url = URL(string: "https://github.com/\(repo)/releases/download/\(version)/\(archiveName)") else {
+                throw ValidationError("Invalid GitHub repository: \(repo)")
+            }
+            let (temporaryURL, response) = try await URLSession.shared.download(from: url)
+            if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
+                throw ValidationError("Download failed with HTTP \(http.statusCode): \(url.absoluteString)")
+            }
+            let destinationURL = FileManager.default.temporaryDirectory
+                .appendingPathComponent(UUID().uuidString)
+                .appendingPathExtension("tar.gz")
+            try FileManager.default.moveItem(at: temporaryURL, to: destinationURL)
+            return destinationURL
+        }
+    }
+}
+
+private enum TemplateArchiveInstaller {
+    static func install(archiveURL: URL, repo: String, version: String, cacheRoot: URL) throws -> URL {
+        guard FileManager.default.fileExists(atPath: archiveURL.path) else {
+            throw ValidationError("Template archive not found: \(archiveURL.path)")
+        }
+
+        let extractURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("gitci-screens-template-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: extractURL, withIntermediateDirectories: true)
+        defer {
+            try? FileManager.default.removeItem(at: extractURL)
+        }
+
+        try runTarExtract(archiveURL: archiveURL, destinationURL: extractURL)
+        let packageURL = try packageRoot(in: extractURL)
+        let destinationURL = try cacheDestination(repo: repo, version: version, cacheRoot: cacheRoot)
+
+        try? FileManager.default.removeItem(at: destinationURL)
+        try FileManager.default.createDirectory(
+            at: destinationURL.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try FileManager.default.copyItem(at: packageURL, to: destinationURL)
+        return destinationURL
+    }
+
+    static func cacheDestination(repo: String, version: String, cacheRoot: URL) throws -> URL {
+        try cacheRoot
+            .appendingPathComponent(repositoryName(repo))
+            .appendingPathComponent(version)
+            .standardizedFileURL
+    }
+
+    static func repositoryName(_ repo: String) throws -> String {
+        guard let name = repo.split(separator: "/").last, !name.isEmpty else {
+            throw ValidationError("Invalid GitHub repository: \(repo)")
+        }
+        return String(name)
+    }
+
+    private static func runTarExtract(archiveURL: URL, destinationURL: URL) throws {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+        process.arguments = ["tar", "-xzf", archiveURL.path, "-C", destinationURL.path]
+        try process.run()
+        process.waitUntilExit()
+        guard process.terminationStatus == 0 else {
+            throw ValidationError("Could not extract template archive: \(archiveURL.path)")
+        }
+    }
+
+    private static func packageRoot(in extractURL: URL) throws -> URL {
+        if FileManager.default.fileExists(
+            atPath: extractURL.appendingPathComponent("gitci/screens/packs").path
+        ) {
+            return extractURL
+        }
+        let children = try FileManager.default.contentsOfDirectory(
+            at: extractURL,
+            includingPropertiesForKeys: [.isDirectoryKey],
+            options: [.skipsHiddenFiles]
+        )
+        for child in children {
+            if FileManager.default.fileExists(
+                atPath: child.appendingPathComponent("gitci/screens/packs").path
+            ) {
+                return child
+            }
+        }
+        throw ValidationError("Template archive does not contain gitci/screens/packs.")
     }
 }
 

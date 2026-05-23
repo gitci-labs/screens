@@ -7,10 +7,11 @@ This is the shortest current path from an app repo with existing screenshots to 
 From the app repo root:
 
 ```sh
-gitci-screens init . --name "My App"
+gitci-screens init . --name "My App" --github-workflow
 ```
 
 This creates `gitci/screens` with a minimal renderable scene set.
+The optional workflow writes `.github/workflows/gitci-screens.yml` so CI can build, gallery, archive, and upload screenshot zips.
 
 ## 2. Create a Templated Set
 

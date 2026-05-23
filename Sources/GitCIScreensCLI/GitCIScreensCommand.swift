@@ -327,6 +327,9 @@ struct Init: ParsableCommand {
     @Option(name: .long, help: "Project display name.")
     var name: String = "GitCI Screens Project"
 
+    @Flag(name: .long, help: "Write .github/workflows/gitci-screens.yml for CI builds.")
+    var githubWorkflow = false
+
     func run() throws {
         let projectURL = URL(fileURLWithPath: path).standardizedFileURL
         let screensRoot = projectURL.appendingPathComponent("gitci").appendingPathComponent("screens")
@@ -408,6 +411,41 @@ struct Init: ParsableCommand {
             </svg>
             """
         )
+        if githubWorkflow {
+            let workflowURL = projectURL
+                .appendingPathComponent(".github")
+                .appendingPathComponent("workflows")
+                .appendingPathComponent("gitci-screens.yml")
+            try FileManager.default.createDirectory(
+                at: workflowURL.deletingLastPathComponent(),
+                withIntermediateDirectories: true
+            )
+            try writeIfMissing(
+                url: workflowURL,
+                contents: """
+                name: GitCI Screens
+
+                on:
+                  push:
+                    branches: [main]
+                  pull_request:
+
+                jobs:
+                  screenshots:
+                    runs-on: ubuntu-latest
+                    steps:
+                      - uses: actions/checkout@v4
+                      - run: docker run --rm -v "$PWD":/workspace ghcr.io/gitci-labs/screens:main build /workspace
+                      - run: docker run --rm -v "$PWD":/workspace ghcr.io/gitci-labs/screens:main gallery /workspace
+                      - run: docker run --rm -v "$PWD":/workspace ghcr.io/gitci-labs/screens:main archive /workspace
+                      - uses: actions/upload-artifact@v4
+                        with:
+                          name: gitci-screens
+                          path: gitci/screens/build/*.zip
+                          retention-days: 14
+                """
+            )
+        }
         print(screensRoot.path)
     }
 

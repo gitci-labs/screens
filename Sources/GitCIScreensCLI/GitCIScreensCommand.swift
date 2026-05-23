@@ -251,6 +251,12 @@ struct Export: AsyncParsableCommand {
     @Option(name: .long, help: "Zip output path.")
     var archiveOut: String?
 
+    @Option(name: .long, help: "Also copy screenshots into a fastlane/screenshots layout.")
+    var fastlaneOut: String?
+
+    @Option(name: .long, help: "Locale folder to use for Fastlane output when the scene set has no locales.")
+    var fastlaneDefaultLocale: String = "en-US"
+
     @Option(name: .long, help: "Renderer backend.")
     var renderer: String = "node-playwright"
 
@@ -306,12 +312,32 @@ struct Export: AsyncParsableCommand {
             archiveURL = resolvedArchiveURL
         }
 
+        let fastlaneURL: URL?
+        if let fastlaneOut {
+            let projectURL = URL(fileURLWithPath: path).standardizedFileURL
+            let resolvedFastlaneURL = URL(
+                fileURLWithPath: fastlaneOut,
+                relativeTo: projectURL
+            ).standardizedFileURL
+            _ = try FastlaneScreenshotsExporter(
+                buildOutputURL: context.outputURL,
+                outputURL: resolvedFastlaneURL,
+                defaultLocale: fastlaneDefaultLocale
+            ).export()
+            fastlaneURL = resolvedFastlaneURL
+        } else {
+            fastlaneURL = nil
+        }
+
         print("output: \(context.outputURL.path)")
         if let galleryIndexURL {
             print("gallery: \(galleryIndexURL.path)")
         }
         if let archiveURL {
             print("archive: \(archiveURL.path)")
+        }
+        if let fastlaneURL {
+            print("fastlane: \(fastlaneURL.path)")
         }
     }
 }

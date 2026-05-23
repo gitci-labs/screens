@@ -68,6 +68,12 @@ If the scene set declares `locales`, export repeats the selected slots for each 
 To hand the built screenshots to an existing Fastlane pipeline:
 
 ```sh
+gitci-screens export . --scene-set launch --strict --fastlane-out fastlane/screenshots
+```
+
+For an already-built scene set, use:
+
+```sh
 gitci-screens fastlane . --scene-set launch --out fastlane/screenshots
 ```
 

@@ -39,7 +39,7 @@ The current built-in App Store targets are:
 .build/debug/gitci-screens validate examples/minimal --strict
 .build/debug/gitci-screens plan examples/minimal --scene-set launch
 .build/debug/gitci-screens build examples/minimal --scene-set launch
-.build/debug/gitci-screens export examples/minimal --scene-set launch --strict
+.build/debug/gitci-screens export examples/minimal --scene-set launch --strict --fastlane-out fastlane/screenshots
 .build/debug/gitci-screens archive examples/minimal --scene-set launch
 .build/debug/gitci-screens fastlane examples/minimal --scene-set launch --out fastlane/screenshots
 .build/debug/gitci-screens gallery examples/minimal --scene-set launch
@@ -72,7 +72,7 @@ mise run package-local
 
 `init` writes a placeholder SVG screenshot so the generated project can be validated and rendered immediately. Add `--github-workflow` to write a starter GitHub Actions workflow that builds, galleries, archives, and uploads screenshots using the published Docker image. Replace `gitci/screens/assets/iphone/screenshot.svg` with a real app screenshot when you are ready. `scene-sets create` instantiates a reusable scene set template into the project and writes placeholder SVG assets for any missing `.svg` asset references. Pass repeated `--asset name=path` values to fill matching placeholders by basename, for example `--asset hero=Screenshots/inbox.png`. Pass repeated `--variant slot=variant` values to select a variant for a scene-set template slot at creation time. Use `scene-sets fill-assets` later to refresh screenshots in an existing set.
 
-`build` writes `manifest.gitci-output.json` next to the render plan. The output manifest includes each screenshot's target dimensions plus locale metadata, span, span index, composite canvas, display gap, and clip rectangle metadata so galleries and future editors can reconstruct localized and wide scenes precisely. `gallery` writes a static HTML index under the selected scene set build directory, and `archive` zips an existing scene-set build directory for CI artifacts or sharing. `fastlane` copies an existing build into a `fastlane/screenshots/<locale>/...` layout for `fastlane deliver`. `export` runs build, gallery, and archive in one pass for local dogfooding and CI. Pass `--strict` to `validate`, `build`, or `export` when warnings such as first-three screenshots missing headlines should fail the run.
+`build` writes `manifest.gitci-output.json` next to the render plan. The output manifest includes each screenshot's target dimensions plus locale metadata, span, span index, composite canvas, display gap, and clip rectangle metadata so galleries and future editors can reconstruct localized and wide scenes precisely. `gallery` writes a static HTML index under the selected scene set build directory, and `archive` zips an existing scene-set build directory for CI artifacts or sharing. `fastlane` copies an existing build into a `fastlane/screenshots/<locale>/...` layout for `fastlane deliver`; `export --fastlane-out fastlane/screenshots` does the same after rendering. `export` runs build, gallery, and archive in one pass for local dogfooding and CI. Pass `--strict` to `validate`, `build`, or `export` when warnings such as first-three screenshots missing headlines should fail the run.
 
 ## Current Scope
 

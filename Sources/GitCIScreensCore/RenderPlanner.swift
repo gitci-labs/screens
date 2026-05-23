@@ -335,6 +335,11 @@ public struct RenderPlanner: Sendable {
            let pseudoLocale = PseudoLocalizer.locale(for: sceneSet) {
             locales.append(pseudoLocale)
         }
+        if options.includeOverflowLocale,
+           !locales.contains(where: { $0.id == OverflowLocalizer.localeID }),
+           let overflowLocale = OverflowLocalizer.locale(for: sceneSet) {
+            locales.append(overflowLocale)
+        }
         guard !locales.isEmpty else {
             return [nil]
         }
@@ -438,10 +443,16 @@ public struct RenderPlanner: Sendable {
 
 public struct RenderPlannerOptions: Equatable, Sendable {
     public var includePseudoLocale: Bool
+    public var includeOverflowLocale: Bool
     public var variantGroupID: String?
 
-    public init(includePseudoLocale: Bool = false, variantGroupID: String? = nil) {
+    public init(
+        includePseudoLocale: Bool = false,
+        includeOverflowLocale: Bool = false,
+        variantGroupID: String? = nil
+    ) {
         self.includePseudoLocale = includePseudoLocale
+        self.includeOverflowLocale = includeOverflowLocale
         self.variantGroupID = variantGroupID
     }
 }

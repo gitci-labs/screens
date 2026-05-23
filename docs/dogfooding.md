@@ -54,6 +54,15 @@ Use `--pseudo-locale` before shipping localized screenshots to catch text expans
 gitci-screens validate . --scene-set launch --strict --pseudo-locale
 ```
 
+Use `--overflow-locale` when you want a deliberately harsher long-string pass:
+
+```sh
+gitci-screens validate . --scene-set launch --strict --overflow-locale
+gitci-screens build . --scene-set launch --overflow-locale
+```
+
+That adds `qps-overflow`, a synthetic locale that repeats localized fallback copy until it is long enough to catch brittle text containers.
+
 If the scene set declares `variantGroups` for Product Page Optimization or custom product page work, validate every group before spending time rendering pixels:
 
 ```sh

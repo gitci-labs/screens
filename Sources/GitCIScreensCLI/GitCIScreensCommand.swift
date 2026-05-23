@@ -145,6 +145,9 @@ struct Validate: ParsableCommand {
     @Flag(name: .long, help: "Include a synthetic qps-ploc pseudo-locale for localization stress testing.")
     var pseudoLocale = false
 
+    @Flag(name: .long, help: "Include a synthetic qps-overflow locale with long localized strings.")
+    var overflowLocale = false
+
     @Option(name: .long, help: "Apply a named scene-set variant group.")
     var variantGroup: String?
 
@@ -224,6 +227,7 @@ struct Validate: ParsableCommand {
             workspace: workspace,
             options: RenderPlannerOptions(
                 includePseudoLocale: pseudoLocale,
+                includeOverflowLocale: overflowLocale,
                 variantGroupID: variantGroup
             )
         ).validate(sceneSet: sceneSet)
@@ -268,6 +272,9 @@ struct Plan: ParsableCommand {
     @Flag(name: .long, help: "Include a synthetic qps-ploc pseudo-locale for localization stress testing.")
     var pseudoLocale = false
 
+    @Flag(name: .long, help: "Include a synthetic qps-overflow locale with long localized strings.")
+    var overflowLocale = false
+
     @Option(name: .long, help: "Apply a named scene-set variant group.")
     var variantGroup: String?
 
@@ -277,6 +284,7 @@ struct Plan: ParsableCommand {
             sceneSet: sceneSet,
             out: nil,
             includePseudoLocale: pseudoLocale,
+            includeOverflowLocale: overflowLocale,
             variantGroup: variantGroup
         ).load()
         let planURL = URL(
@@ -315,6 +323,9 @@ struct Build: AsyncParsableCommand {
     @Flag(name: .long, help: "Include a synthetic qps-ploc pseudo-locale for localization stress testing.")
     var pseudoLocale = false
 
+    @Flag(name: .long, help: "Include a synthetic qps-overflow locale with long localized strings.")
+    var overflowLocale = false
+
     @Option(name: .long, help: "Apply a named scene-set variant group.")
     var variantGroup: String?
 
@@ -333,7 +344,8 @@ struct Build: AsyncParsableCommand {
                 path: path,
                 sceneSet: sceneSet,
                 out: out,
-                includePseudoLocale: pseudoLocale
+                includePseudoLocale: pseudoLocale,
+                includeOverflowLocale: overflowLocale
             ).load()
             let groups = context.sceneSet.manifest.variantGroups ?? []
             guard !groups.isEmpty else {
@@ -353,12 +365,14 @@ struct Build: AsyncParsableCommand {
             sceneSet: sceneSet,
             out: out,
             includePseudoLocale: pseudoLocale,
+            includeOverflowLocale: overflowLocale,
             variantGroup: variantGroup
         ).load()
         let report = ProjectValidator(
             workspace: context.workspace,
             options: RenderPlannerOptions(
                 includePseudoLocale: pseudoLocale,
+                includeOverflowLocale: overflowLocale,
                 variantGroupID: variantGroup
             )
         ).validate(sceneSet: context.sceneSet)
@@ -413,6 +427,9 @@ struct Export: AsyncParsableCommand {
     @Flag(name: .long, help: "Include a synthetic qps-ploc pseudo-locale for localization stress testing.")
     var pseudoLocale = false
 
+    @Flag(name: .long, help: "Include a synthetic qps-overflow locale with long localized strings.")
+    var overflowLocale = false
+
     @Option(name: .long, help: "Apply a named scene-set variant group.")
     var variantGroup: String?
 
@@ -431,7 +448,8 @@ struct Export: AsyncParsableCommand {
                 path: path,
                 sceneSet: sceneSet,
                 out: out,
-                includePseudoLocale: pseudoLocale
+                includePseudoLocale: pseudoLocale,
+                includeOverflowLocale: overflowLocale
             ).load()
             let groups = context.sceneSet.manifest.variantGroups ?? []
             guard !groups.isEmpty else {
@@ -454,12 +472,14 @@ struct Export: AsyncParsableCommand {
             sceneSet: sceneSet,
             out: out,
             includePseudoLocale: pseudoLocale,
+            includeOverflowLocale: overflowLocale,
             variantGroup: variantGroup
         ).load()
         let report = ProjectValidator(
             workspace: context.workspace,
             options: RenderPlannerOptions(
                 includePseudoLocale: pseudoLocale,
+                includeOverflowLocale: overflowLocale,
                 variantGroupID: variantGroup
             )
         ).validate(sceneSet: context.sceneSet)
@@ -1468,6 +1488,7 @@ private struct BuildContext {
     var sceneSet: String?
     var out: String?
     var includePseudoLocale = false
+    var includeOverflowLocale = false
     var variantGroup: String?
 
     func load() throws -> LoadedBuildContext {
@@ -1493,6 +1514,7 @@ private struct BuildContext {
             workspace: workspace,
             options: RenderPlannerOptions(
                 includePseudoLocale: includePseudoLocale,
+                includeOverflowLocale: includeOverflowLocale,
                 variantGroupID: variantGroup
             )
         ).makePlan(

@@ -45,16 +45,18 @@ public struct ValidationReport: Codable, Equatable, Sendable {
 
 public struct ProjectValidator: Sendable {
     public var workspace: ScreensWorkspace
+    public var options: RenderPlannerOptions
 
-    public init(workspace: ScreensWorkspace) {
+    public init(workspace: ScreensWorkspace, options: RenderPlannerOptions = RenderPlannerOptions()) {
         self.workspace = workspace
+        self.options = options
     }
 
     public func validate(sceneSet: LoadedSceneSet) -> ValidationReport {
         var diagnostics: [ProjectDiagnostic] = []
 
         do {
-            let plan = try RenderPlanner(workspace: workspace).makePlan(
+            let plan = try RenderPlanner(workspace: workspace, options: options).makePlan(
                 sceneSet: sceneSet,
                 outputDirectory: workspace.rootURL.appendingPathComponent("build/validation")
             )

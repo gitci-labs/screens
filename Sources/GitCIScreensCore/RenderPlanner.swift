@@ -2,9 +2,11 @@ import Foundation
 
 public struct RenderPlanner: Sendable {
     public var workspace: ScreensWorkspace
+    public var options: RenderPlannerOptions
 
-    public init(workspace: ScreensWorkspace) {
+    public init(workspace: ScreensWorkspace, options: RenderPlannerOptions = RenderPlannerOptions()) {
         self.workspace = workspace
+        self.options = options
     }
 
     public func makePlan(sceneSet: LoadedSceneSet, outputDirectory: URL) throws -> RenderPlan {
@@ -36,7 +38,7 @@ public struct RenderPlanner: Sendable {
             var outputs: [RenderPlanOutput] = []
             var usedOutputPaths = Set<String>()
 
-            for locale in normalizedLocales(sceneSet.manifest.locales) {
+            for locale in normalizedLocales(sceneSet.manifest) {
                 var localeOutputCount = 0
                 for slot in sceneSet.manifest.slots {
                     guard let variant = try selectedVariant(in: slot, targetID: targetID) else {
@@ -266,11 +268,19 @@ public struct RenderPlanner: Sendable {
         }
     }
 
-    private func normalizedLocales(_ locales: [SceneSetLocale]?) -> [SceneSetLocale?] {
-        guard let locales, !locales.isEmpty else {
+    private func normalizedLocales(_ sceneSet: SceneSetManifest) -> [SceneSetLocale?] {
+        var locales = sceneSet.locales ?? []
+        let hasConfiguredLocales = !locales.isEmpty
+        if options.includePseudoLocale,
+           !locales.contains(where: { $0.id == PseudoLocalizer.localeID }),
+           let pseudoLocale = PseudoLocalizer.locale(for: sceneSet) {
+            locales.append(pseudoLocale)
+        }
+        guard !locales.isEmpty else {
             return [nil]
         }
-        return locales.map(Optional.some)
+        let configured = locales.map(Optional.some)
+        return hasConfiguredLocales ? configured : [nil] + configured
     }
 
     private func resolveLocalizedValues(in value: JSONValue, locale: SceneSetLocale?) throws -> JSONValue {
@@ -364,5 +374,13 @@ public struct RenderPlanner: Sendable {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withDashSeparatorInDate, .withColonSeparatorInTime]
         return formatter.string(from: Date())
+    }
+}
+
+public struct RenderPlannerOptions: Equatable, Sendable {
+    public var includePseudoLocale: Bool
+
+    public init(includePseudoLocale: Bool = false) {
+        self.includePseudoLocale = includePseudoLocale
     }
 }

@@ -142,6 +142,9 @@ struct Validate: ParsableCommand {
     @Flag(name: .long, help: "Print JSON.")
     var json = false
 
+    @Flag(name: .long, help: "Include a synthetic qps-ploc pseudo-locale for localization stress testing.")
+    var pseudoLocale = false
+
     @Flag(name: .long, help: "Treat warnings as failures.")
     var strict = false
 
@@ -150,7 +153,10 @@ struct Validate: ParsableCommand {
         let screensRoot = try ScreensRootLocator.locate(from: projectURL)
         let workspace = try ScreensWorkspace.load(root: screensRoot)
         let selectedSceneSet = try workspace.resolveSceneSet(id: sceneSet)
-        let report = ProjectValidator(workspace: workspace).validate(sceneSet: selectedSceneSet)
+        let report = ProjectValidator(
+            workspace: workspace,
+            options: RenderPlannerOptions(includePseudoLocale: pseudoLocale)
+        ).validate(sceneSet: selectedSceneSet)
 
         if json {
             let data = try JSONEncoder.gitci.encode(report)
@@ -183,8 +189,16 @@ struct Plan: ParsableCommand {
     @Option(name: .long, help: "Plan output path.")
     var out: String?
 
+    @Flag(name: .long, help: "Include a synthetic qps-ploc pseudo-locale for localization stress testing.")
+    var pseudoLocale = false
+
     func run() throws {
-        let context = try BuildContext(path: path, sceneSet: sceneSet, out: nil).load()
+        let context = try BuildContext(
+            path: path,
+            sceneSet: sceneSet,
+            out: nil,
+            includePseudoLocale: pseudoLocale
+        ).load()
         let planURL = URL(
             fileURLWithPath: out ?? context.planURL.path,
             relativeTo: URL(fileURLWithPath: path).standardizedFileURL
@@ -218,9 +232,20 @@ struct Build: AsyncParsableCommand {
     @Flag(name: .long, help: "Treat validation warnings as failures.")
     var strict = false
 
+    @Flag(name: .long, help: "Include a synthetic qps-ploc pseudo-locale for localization stress testing.")
+    var pseudoLocale = false
+
     func run() async throws {
-        let context = try BuildContext(path: path, sceneSet: sceneSet, out: out).load()
-        let report = ProjectValidator(workspace: context.workspace).validate(sceneSet: context.sceneSet)
+        let context = try BuildContext(
+            path: path,
+            sceneSet: sceneSet,
+            out: out,
+            includePseudoLocale: pseudoLocale
+        ).load()
+        let report = ProjectValidator(
+            workspace: context.workspace,
+            options: RenderPlannerOptions(includePseudoLocale: pseudoLocale)
+        ).validate(sceneSet: context.sceneSet)
         for diagnostic in report.diagnostics {
             printError("\(diagnostic.severity.rawValue): \(diagnostic.code): \(diagnostic.message)")
         }
@@ -269,9 +294,20 @@ struct Export: AsyncParsableCommand {
     @Flag(name: .long, help: "Treat validation warnings as failures.")
     var strict = false
 
+    @Flag(name: .long, help: "Include a synthetic qps-ploc pseudo-locale for localization stress testing.")
+    var pseudoLocale = false
+
     func run() async throws {
-        let context = try BuildContext(path: path, sceneSet: sceneSet, out: out).load()
-        let report = ProjectValidator(workspace: context.workspace).validate(sceneSet: context.sceneSet)
+        let context = try BuildContext(
+            path: path,
+            sceneSet: sceneSet,
+            out: out,
+            includePseudoLocale: pseudoLocale
+        ).load()
+        let report = ProjectValidator(
+            workspace: context.workspace,
+            options: RenderPlannerOptions(includePseudoLocale: pseudoLocale)
+        ).validate(sceneSet: context.sceneSet)
         for diagnostic in report.diagnostics {
             printError("\(diagnostic.severity.rawValue): \(diagnostic.code): \(diagnostic.message)")
         }
@@ -1246,6 +1282,7 @@ private struct BuildContext {
     var path: String
     var sceneSet: String?
     var out: String?
+    var includePseudoLocale = false
 
     func load() throws -> LoadedBuildContext {
         let projectURL = URL(fileURLWithPath: path).standardizedFileURL
@@ -1263,7 +1300,10 @@ private struct BuildContext {
                 .standardizedFileURL
         }
 
-        let plan = try RenderPlanner(workspace: workspace).makePlan(
+        let plan = try RenderPlanner(
+            workspace: workspace,
+            options: RenderPlannerOptions(includePseudoLocale: includePseudoLocale)
+        ).makePlan(
             sceneSet: selectedSceneSet,
             outputDirectory: outputURL
         )

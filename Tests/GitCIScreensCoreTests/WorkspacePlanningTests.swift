@@ -241,6 +241,60 @@ final class WorkspacePlanningTests: XCTestCase {
         XCTAssertEqual(screenshots.map { $0.locale?.id }, ["en-US", "ja-JP"])
     }
 
+    func testPlannerCanAddPseudoLocaleForLocalizationStressTesting() throws {
+        let root = try exampleRoot()
+        let workspace = try ScreensWorkspace.load(root: root)
+        var sceneSet = try workspace.resolveSceneSet(id: "launch")
+        sceneSet.manifest.targets = ["appstore.iphone.6_9.portrait"]
+        sceneSet.manifest.locales = nil
+        sceneSet.manifest.slots = [
+            SceneSlot(
+                id: "hero",
+                label: nil,
+                selectedVariant: nil,
+                variants: [
+                    SceneVariant(
+                        id: "default",
+                        sceneTemplate: "gitci.core.hero-device",
+                        includeTargets: nil,
+                        excludeTargets: nil,
+                        props: .object([
+                            "headline": .object([
+                                "kind": .string("localized"),
+                                "key": .string("hero.headline"),
+                                "fallback": .string("Ship screenshots")
+                            ]),
+                            "screenshot": .object([
+                                "kind": .string("asset"),
+                                "path": .string("../../assets/iphone/inbox.svg")
+                            ]),
+                            "device": .string("iphone-2d")
+                        ])
+                    )
+                ]
+            )
+        ]
+
+        let plan = try RenderPlanner(
+            workspace: workspace,
+            options: RenderPlannerOptions(includePseudoLocale: true)
+        ).makePlan(
+            sceneSet: sceneSet,
+            outputDirectory: root.appendingPathComponent("build/test")
+        )
+        let outputs = try XCTUnwrap(plan.targets.first?.outputs)
+        let pseudoHeadline = try XCTUnwrap(outputs[1].props.objectValue?["headline"]?.stringValue)
+
+        XCTAssertEqual(outputs.map { $0.locale?.id }, [nil, "qps-ploc"])
+        XCTAssertEqual(outputs.map(\.outputPath), [
+            "appstore.iphone.6_9.portrait/01-hero.png",
+            "qps-ploc/appstore.iphone.6_9.portrait/01-hero.png"
+        ])
+        XCTAssertEqual(outputs[0].props.objectValue?["headline"]?.stringValue, "Ship screenshots")
+        XCTAssertTrue(pseudoHeadline.hasPrefix("[!! "))
+        XCTAssertGreaterThan(pseudoHeadline.count, "Ship screenshots".count)
+    }
+
     func testValidationReportsMissingLocalizedString() throws {
         let root = try exampleRoot()
         let workspace = try ScreensWorkspace.load(root: root)

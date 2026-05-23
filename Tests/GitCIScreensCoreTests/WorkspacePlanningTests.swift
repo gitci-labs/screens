@@ -56,6 +56,24 @@ final class WorkspacePlanningTests: XCTestCase {
         XCTAssertEqual(report.diagnostics, [])
     }
 
+    func testSpecificAppearancePatternWinsOverBroadPattern() throws {
+        let root = try exampleRoot()
+        let workspace = try ScreensWorkspace.load(root: root)
+        var sceneSet = try workspace.resolveSceneSet(id: "launch")
+        sceneSet.manifest.appearanceByTarget = [
+            "appstore.*": .light,
+            "appstore.iphone.*": .dark
+        ]
+        let plan = try RenderPlanner(workspace: workspace).makePlan(
+            sceneSet: sceneSet,
+            outputDirectory: root.appendingPathComponent("build/test")
+        )
+
+        XCTAssertEqual(plan.targets[0].appearance, .dark)
+        XCTAssertEqual(plan.targets[1].appearance, .light)
+        XCTAssertEqual(plan.targets[2].appearance, .light)
+    }
+
     private func exampleRoot() throws -> URL {
         let packageRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()

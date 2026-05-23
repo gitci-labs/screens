@@ -202,7 +202,12 @@ public struct RenderPlanner: Sendable {
         guard let appearanceByTarget else {
             return .light
         }
-        for (pattern, appearance) in appearanceByTarget where Self.matches(pattern: pattern, value: targetID) {
+        let matches = appearanceByTarget
+            .filter { pattern, _ in Self.matches(pattern: pattern, value: targetID) }
+            .sorted { lhs, rhs in
+                Self.patternSpecificity(lhs.key) > Self.patternSpecificity(rhs.key)
+            }
+        for (_, appearance) in matches {
             if appearance == .automatic, targetID.hasPrefix("appstore.") {
                 return .light
             }
@@ -266,6 +271,11 @@ public struct RenderPlanner: Sendable {
             return value.hasSuffix(last)
         }
         return true
+    }
+
+    private static func patternSpecificity(_ pattern: String) -> Int {
+        let wildcardPenalty = pattern.filter { $0 == "*" }.count * 1_000
+        return pattern.count - wildcardPenalty
     }
 
     private static func zeroPadded(_ value: Int) -> String {

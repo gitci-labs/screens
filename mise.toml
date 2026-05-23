@@ -18,8 +18,7 @@ run = [
 [tasks.render-demo]
 run = [
   "swift build",
-  ".build/debug/gitci-screens build examples/minimal",
-  ".build/debug/gitci-screens gallery examples/minimal"
+  ".build/debug/gitci-screens export examples/minimal --strict"
 ]
 
 [tasks.package-local]
@@ -33,4 +32,4 @@ run = [
 run = "docker build -f docker/Dockerfile -t ghcr.io/gitci-labs/screens:local ."
 
 [tasks.docker-run-demo]
-run = "docker run --rm -v \"$PWD\":/workspace ghcr.io/gitci-labs/screens:local build /workspace/examples/minimal"
+run = "docker run --rm -v \"$PWD\":/workspace ghcr.io/gitci-labs/screens:local export /workspace/examples/minimal --strict"

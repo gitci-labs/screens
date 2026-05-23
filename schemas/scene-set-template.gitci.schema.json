@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://screens.gitci.com/schemas/scene-set-template.gitci.schema.json",
+  "title": "GitCI Screens Scene Set Template",
+  "type": "object",
+  "required": ["schemaVersion", "id", "name", "sceneSet"],
+  "additionalProperties": true,
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "id": { "type": "string", "minLength": 1 },
+    "name": { "type": "string", "minLength": 1 },
+    "pack": { "type": "string" },
+    "summary": { "type": "string" },
+    "descriptionMarkdown": { "type": "string" },
+    "tags": { "type": "array", "items": { "type": "string" } },
+    "sceneSet": {
+      "$ref": "https://screens.gitci.com/schemas/scene-set.gitci.schema.json"
+    }
+  }
+}

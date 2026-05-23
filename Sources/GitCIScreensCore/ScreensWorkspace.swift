@@ -7,6 +7,7 @@ public struct ScreensWorkspace: Sendable {
     public var packs: [PackManifest]
     public var targets: [String: TargetProfile]
     public var sceneTemplates: [String: SceneTemplateRecord]
+    public var sceneSetTemplates: [String: SceneSetTemplateManifest]
     public var components: [String: ComponentManifest]
     public var palettes: [String: PaletteManifest]
     public var themes: [String: ThemeManifest]
@@ -27,6 +28,7 @@ public struct ScreensWorkspace: Sendable {
             packs: catalog.packs,
             targets: catalog.targets,
             sceneTemplates: catalog.sceneTemplates,
+            sceneSetTemplates: catalog.sceneSetTemplates,
             components: catalog.components,
             palettes: catalog.palettes,
             themes: catalog.themes
@@ -89,6 +91,7 @@ public struct ScreensWorkspace: Sendable {
             packs: [],
             targets: BuiltInCatalog.targetProfiles,
             sceneTemplates: BuiltInCatalog.sceneTemplates,
+            sceneSetTemplates: [:],
             components: [:],
             palettes: [:],
             themes: [:]
@@ -258,6 +261,11 @@ public struct ScreensWorkspace: Sendable {
             )
         }
 
+        for manifestURL in findManifestFiles(root: directory, fileName: "scene-set-template.gitci.json") {
+            let manifest = try decodeVersioned(SceneSetTemplateManifest.self, from: manifestURL)
+            catalog.sceneSetTemplates[manifest.id] = manifest
+        }
+
         for manifestURL in findManifestFiles(root: directory, fileName: "component.gitci.json") {
             let manifest = try decodeVersioned(ComponentManifest.self, from: manifestURL)
             catalog.components[manifest.id] = manifest
@@ -339,6 +347,7 @@ private struct TemplateCatalog {
     var packs: [PackManifest]
     var targets: [String: TargetProfile]
     var sceneTemplates: [String: SceneTemplateRecord]
+    var sceneSetTemplates: [String: SceneSetTemplateManifest]
     var components: [String: ComponentManifest]
     var palettes: [String: PaletteManifest]
     var themes: [String: ThemeManifest]
@@ -350,6 +359,7 @@ private protocol VersionedManifest {
 
 extension PackManifest: VersionedManifest {}
 extension SceneTemplateManifest: VersionedManifest {}
+extension SceneSetTemplateManifest: VersionedManifest {}
 extension ComponentManifest: VersionedManifest {}
 extension PaletteManifest: VersionedManifest {}
 extension ThemeManifest: VersionedManifest {}

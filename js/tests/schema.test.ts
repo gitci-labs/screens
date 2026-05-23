@@ -29,6 +29,7 @@ describe('GitCI manifest schemas', () => {
     'scene-set.gitci.json': 'https://screens.gitci.com/schemas/scene-set.gitci.schema.json',
     'pack.gitci.json': 'https://screens.gitci.com/schemas/pack.gitci.schema.json',
     'scene-template.gitci.json': 'https://screens.gitci.com/schemas/scene-template.gitci.schema.json',
+    'scene-set-template.gitci.json': 'https://screens.gitci.com/schemas/scene-set-template.gitci.schema.json',
     'component.gitci.json': 'https://screens.gitci.com/schemas/component.gitci.schema.json',
     'theme.gitci.json': 'https://screens.gitci.com/schemas/theme.gitci.schema.json',
     'palette.gitci.json': 'https://screens.gitci.com/schemas/palette.gitci.schema.json',

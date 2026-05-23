@@ -41,6 +41,7 @@ final class WorkspacePlanningTests: XCTestCase {
             "gitci.core.hero-device"
         ])
         XCTAssertEqual(workspace.packs.map(\.id), ["example.minimal", "gitci.core"])
+        XCTAssertEqual(Set(workspace.sceneSetTemplates.keys), ["gitci.core.basic-launch"])
         XCTAssertEqual(Set(workspace.components.keys), ["gitci.core.device-frame-2d", "gitci.core.device-frame-3d"])
         XCTAssertEqual(Set(workspace.palettes.keys), ["gitci.palette.gitci-blue"])
         XCTAssertEqual(Set(workspace.themes.keys), ["gitci.theme.clean-editorial"])

@@ -76,6 +76,7 @@ Supported manifest filenames:
 
 - `pack.gitci.json`
 - `scene-template.gitci.json`
+- `scene-set-template.gitci.json`
 - `component.gitci.json`
 - `theme.gitci.json`
 - `palette.gitci.json`
@@ -96,6 +97,34 @@ Scene template manifests must include renderable module metadata:
 ```
 
 Package entries such as `@gitci/screens-templates-core` are passed through. Relative entries are resolved from the manifest directory and written into the render plan so the Node renderer can generate a Vite registry without rediscovering files.
+
+Scene set template manifests are browseable presets for creating a project scene set. They wrap a full `sceneSet` object with pack metadata, summary text, and tags so the CLI gallery and future GUI can present starter sets without evaluating TypeScript:
+
+```json
+{
+  "schemaVersion": 1,
+  "id": "gitci.core.basic-launch",
+  "name": "Basic Launch Screens",
+  "pack": "gitci.core",
+  "sceneSet": {
+    "schemaVersion": 1,
+    "id": "launch",
+    "targets": ["appstore.iphone.6_9.portrait"],
+    "slots": [
+      {
+        "id": "hero",
+        "variants": [
+          {
+            "id": "device",
+            "sceneTemplate": "gitci.core.hero-device",
+            "props": {}
+          }
+        ]
+      }
+    ]
+  }
+}
+```
 
 ## Output Manifest
 

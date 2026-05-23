@@ -85,7 +85,7 @@ Implemented:
 - project-local scene template packs rendered through generated Vite registry bundles
 - CSS 2D device frame plus an experimental React Three Fiber 3D device component
 - output manifests and a minimal static gallery
-- file-backed pack, component, theme, palette, target, and scene-template manifests
+- file-backed pack, component, theme, palette, target, scene-template, and scene-set-template manifests
 - JSON Schema files with AJV tests against the bundled example and core pack
 - deterministic Playwright rendering with `deviceScaleFactor = 1`, CSS-pixel screenshots, and disabled animations
 

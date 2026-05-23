@@ -19,6 +19,8 @@ public struct GalleryGenerator: Sendable {
             .write(to: dataURL.appendingPathComponent("targets.json"))
         try JSONEncoder.gitci.encode(workspace.sceneTemplates.values.sorted { $0.id < $1.id })
             .write(to: dataURL.appendingPathComponent("scene-templates.json"))
+        try JSONEncoder.gitci.encode(workspace.sceneSetTemplates.values.sorted { $0.id < $1.id })
+            .write(to: dataURL.appendingPathComponent("scene-set-templates.json"))
         try JSONEncoder.gitci.encode(workspace.packs)
             .write(to: dataURL.appendingPathComponent("packs.json"))
         try JSONEncoder.gitci.encode(workspace.components.values.sorted { $0.id < $1.id })
@@ -37,6 +39,7 @@ public struct GalleryGenerator: Sendable {
             builtOutputs: builtOutputs,
             packs: workspace.packs,
             sceneTemplates: workspace.sceneTemplates.values.sorted { $0.id < $1.id },
+            sceneSetTemplates: workspace.sceneSetTemplates.values.sorted { $0.id < $1.id },
             components: workspace.components.values.sorted { $0.id < $1.id },
             palettes: workspace.palettes.values.sorted { $0.id < $1.id },
             themes: workspace.themes.values.sorted { $0.id < $1.id },
@@ -79,6 +82,7 @@ public struct GalleryGenerator: Sendable {
         builtOutputs: [GalleryBuiltOutput],
         packs: [PackManifest],
         sceneTemplates: [SceneTemplateRecord],
+        sceneSetTemplates: [SceneSetTemplateManifest],
         components: [ComponentManifest],
         palettes: [PaletteManifest],
         themes: [ThemeManifest],
@@ -110,6 +114,19 @@ public struct GalleryGenerator: Sendable {
               <p><code>\(escape($0.id))</code></p>
               <p>Pack: \(escape($0.pack ?? "local"))</p>
               <p>Min aspect: \(format($0.constraints.minAspectRatio))</p>
+              <small>\(escape(($0.tags ?? []).joined(separator: ", ")))</small>
+            </article>
+            """
+        }.joined(separator: "\n")
+        let sceneSetTemplateCards = sceneSetTemplates.map {
+            let slotCount = $0.sceneSet.slots.count
+            let targetCount = $0.sceneSet.targets.count
+            return """
+            <article class="card">
+              <h3>\(escape($0.name))</h3>
+              <p><code>\(escape($0.id))</code></p>
+              <p>\(escape($0.summary ?? "Reusable scene set template."))</p>
+              <p>\(slotCount) slots, \(targetCount) targets</p>
               <small>\(escape(($0.tags ?? []).joined(separator: ", ")))</small>
             </article>
             """
@@ -228,6 +245,8 @@ public struct GalleryGenerator: Sendable {
             <div class="grid">\(packCards)</div>
             <h2>Scene Templates</h2>
             <div class="grid">\(templateCards)</div>
+            <h2>Scene Set Templates</h2>
+            <div class="grid">\(sceneSetTemplateCards)</div>
             <h2>Components</h2>
             <div class="grid">\(componentCards)</div>
             <h2>Palettes</h2>
@@ -241,6 +260,7 @@ public struct GalleryGenerator: Sendable {
               <li><a href="data/scene-sets.json">scene-sets.json</a></li>
               <li><a href="data/packs.json">packs.json</a></li>
               <li><a href="data/scene-templates.json">scene-templates.json</a></li>
+              <li><a href="data/scene-set-templates.json">scene-set-templates.json</a></li>
               <li><a href="data/components.json">components.json</a></li>
               <li><a href="data/palettes.json">palettes.json</a></li>
               <li><a href="data/themes.json">themes.json</a></li>

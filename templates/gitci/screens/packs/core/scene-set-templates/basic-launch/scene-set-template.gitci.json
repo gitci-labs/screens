@@ -1,0 +1,99 @@
+{
+  "$schema": "https://screens.gitci.com/schemas/scene-set-template.gitci.schema.json",
+  "schemaVersion": 1,
+  "id": "gitci.core.basic-launch",
+  "name": "Basic Launch Screens",
+  "pack": "gitci.core",
+  "summary": "A starter App Store screenshot set with a hero, a close-up feature, and a wide spanning scene.",
+  "tags": ["app-store", "starter", "device"],
+  "sceneSet": {
+    "schemaVersion": 1,
+    "id": "launch",
+    "name": "Launch Screens",
+    "targets": [
+      "appstore.iphone.6_9.portrait",
+      "appstore.ipad.13.portrait",
+      "appstore.mac.16_10"
+    ],
+    "appearanceByTarget": {
+      "appstore.*": "light"
+    },
+    "theme": {
+      "id": "gitci.theme.clean-editorial",
+      "palette": "gitci.palette.gitci-blue",
+      "paletteMap": {
+        "--gitci-color-bg": 0,
+        "--gitci-color-primary": 0.5,
+        "--gitci-color-secondary": 0.75,
+        "--gitci-color-fg": 1
+      }
+    },
+    "slots": [
+      {
+        "id": "hero",
+        "label": "Hero",
+        "selectedVariant": "device",
+        "variants": [
+          {
+            "id": "device",
+            "sceneTemplate": "gitci.core.hero-device",
+            "props": {
+              "headline": "Show the moment that sells the app",
+              "subheadline": "Use an existing screenshot, a strong benefit, and a clean device frame.",
+              "screenshot": {
+                "kind": "asset",
+                "path": "../../assets/iphone/hero.png",
+                "alt": "Primary app screen"
+              },
+              "device": "iphone-2d",
+              "devicePose": "tilt-right"
+            }
+          }
+        ]
+      },
+      {
+        "id": "feature",
+        "label": "Feature Close-Up",
+        "selectedVariant": "detail",
+        "variants": [
+          {
+            "id": "detail",
+            "sceneTemplate": "gitci.core.feature-closeup",
+            "props": {
+              "headline": "Make one workflow obvious",
+              "subheadline": "Pair a short claim with the exact screen that proves it.",
+              "screenshot": {
+                "kind": "asset",
+                "path": "../../assets/iphone/detail.png",
+                "alt": "Detailed feature screen"
+              },
+              "device": "iphone-2d"
+            }
+          }
+        ]
+      },
+      {
+        "id": "wide",
+        "label": "Wide Story",
+        "selectedVariant": "wide-hero",
+        "variants": [
+          {
+            "id": "wide-hero",
+            "sceneTemplate": "gitci.core.hero-device",
+            "props": {
+              "headline": "Span screenshots when the story needs room",
+              "subheadline": "The planner renders one wide scene and clips it at frame and gap edges.",
+              "screenshot": {
+                "kind": "asset",
+                "path": "../../assets/ipad/overview.png",
+                "alt": "Wide app overview"
+              },
+              "device": "ipad-2d",
+              "devicePose": "front"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

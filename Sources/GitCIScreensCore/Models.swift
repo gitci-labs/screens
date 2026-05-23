@@ -122,6 +122,17 @@ public struct SceneTemplateManifest: Codable, Equatable, Sendable {
     public var previewProps: JSONValue?
 }
 
+public struct SceneSetTemplateManifest: Codable, Equatable, Sendable {
+    public var schemaVersion: Int
+    public var id: String
+    public var name: String
+    public var pack: String?
+    public var summary: String?
+    public var descriptionMarkdown: String?
+    public var tags: [String]?
+    public var sceneSet: SceneSetManifest
+}
+
 public struct ComponentManifest: Codable, Equatable, Sendable {
     public var schemaVersion: Int
     public var id: String

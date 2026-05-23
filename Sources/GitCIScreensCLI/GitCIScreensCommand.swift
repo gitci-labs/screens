@@ -82,6 +82,7 @@ struct Discover: ParsableCommand {
             packs: workspace.packs,
             targets: workspace.targets.values.sorted { $0.id < $1.id },
             sceneTemplates: workspace.sceneTemplates.values.sorted { $0.id < $1.id },
+            sceneSetTemplates: workspace.sceneSetTemplates.values.sorted { $0.id < $1.id },
             components: workspace.components.values.sorted { $0.id < $1.id },
             palettes: workspace.palettes.values.sorted { $0.id < $1.id },
             themes: workspace.themes.values.sorted { $0.id < $1.id }
@@ -102,6 +103,10 @@ struct Discover: ParsableCommand {
             }
             print("Scene templates:")
             for template in summary.sceneTemplates {
+                print("  - \(template.id)")
+            }
+            print("Scene set templates:")
+            for template in summary.sceneSetTemplates {
                 print("  - \(template.id)")
             }
             print("Components:")
@@ -716,6 +721,7 @@ private struct DiscoverySummary: Codable {
     var packs: [PackManifest]
     var targets: [TargetProfile]
     var sceneTemplates: [SceneTemplateRecord]
+    var sceneSetTemplates: [SceneSetTemplateManifest]
     var components: [ComponentManifest]
     var palettes: [PaletteManifest]
     var themes: [ThemeManifest]

@@ -60,6 +60,25 @@ Named `variantGroups` let CI build product-page experiments without editing slot
 }
 ```
 
+Selection keys can also target a specific output family with `slot-id@target-pattern`. The planner applies the most specific matching target-pattern selection first, then falls back to the plain slot id. This lets one PPO/custom-product-page group keep separate iPhone, iPad, and Mac variants in sync without duplicating a whole scene set:
+
+```json
+{
+  "variantGroups": [
+    {
+      "id": "ppo-a",
+      "name": "Product Page Optimization A",
+      "selections": {
+        "hero@appstore.iphone.*": "iphone-social-proof",
+        "hero@appstore.ipad.*": "ipad-productivity",
+        "hero@appstore.mac.*": "mac-dashboard",
+        "details": "lookup"
+      }
+    }
+  ]
+}
+```
+
 Asset references are resolved relative to the scene set directory:
 
 ```json

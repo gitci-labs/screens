@@ -360,6 +360,74 @@ final class WorkspacePlanningTests: XCTestCase {
         XCTAssertEqual(OutputManifest(plan: plan).sceneSet.variantGroup?.name, "PPO A")
     }
 
+    func testVariantGroupsCanSelectVariantsPerTargetPattern() throws {
+        let root = try exampleRoot()
+        let workspace = try ScreensWorkspace.load(root: root)
+        var sceneSet = try workspace.resolveSceneSet(id: "launch")
+        sceneSet.manifest.targets = [
+            "appstore.iphone.6_9.portrait",
+            "appstore.ipad.13.portrait"
+        ]
+        sceneSet.manifest.variantGroups = [
+            SceneSetVariantGroup(
+                id: "ppo-a",
+                name: "PPO A",
+                selections: [
+                    "hero@appstore.iphone.*": "iphone-alt",
+                    "hero@appstore.ipad.*": "ipad-alt"
+                ]
+            )
+        ]
+        sceneSet.manifest.slots = [
+            SceneSlot(
+                id: "hero",
+                label: nil,
+                selectedVariant: nil,
+                variants: [
+                    SceneVariant(
+                        id: "iphone-alt",
+                        sceneTemplate: "gitci.core.hero-device",
+                        includeTargets: ["appstore.iphone.*"],
+                        excludeTargets: nil,
+                        props: .object([
+                            "headline": .string("iPhone experiment"),
+                            "screenshot": .object([
+                                "kind": .string("asset"),
+                                "path": .string("../../assets/iphone/inbox.svg")
+                            ])
+                        ])
+                    ),
+                    SceneVariant(
+                        id: "ipad-alt",
+                        sceneTemplate: "gitci.core.hero-device",
+                        includeTargets: ["appstore.ipad.*"],
+                        excludeTargets: nil,
+                        props: .object([
+                            "headline": .string("iPad experiment"),
+                            "screenshot": .object([
+                                "kind": .string("asset"),
+                                "path": .string("../../assets/ipad/board.svg")
+                            ])
+                        ])
+                    )
+                ]
+            )
+        ]
+
+        let plan = try RenderPlanner(
+            workspace: workspace,
+            options: RenderPlannerOptions(variantGroupID: "ppo-a")
+        ).makePlan(
+            sceneSet: sceneSet,
+            outputDirectory: root.appendingPathComponent("build/test")
+        )
+        let headlines = plan.targets.compactMap { target in
+            target.outputs.first?.props.objectValue?["headline"]?.stringValue
+        }
+
+        XCTAssertEqual(headlines, ["iPhone experiment", "iPad experiment"])
+    }
+
     func testValidationReportsUnknownVariantGroup() throws {
         let root = try exampleRoot()
         let workspace = try ScreensWorkspace.load(root: root)

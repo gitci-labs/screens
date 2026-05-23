@@ -207,7 +207,11 @@ public struct RenderPlanner: Sendable {
         targetID: String,
         variantSelections: [String: String]
     ) throws -> SceneVariant? {
-        if let selectedVariant = variantSelections[slot.id] {
+        if let selectedVariant = selectedVariantID(
+            for: slot.id,
+            targetID: targetID,
+            variantSelections: variantSelections
+        ) {
             guard let found = slot.variants.first(where: { $0.id == selectedVariant }) else {
                 throw ScreensError.missingVariant(slotID: slot.id, variantID: selectedVariant)
             }
@@ -225,6 +229,28 @@ public struct RenderPlanner: Sendable {
             throw ScreensError.noVariant(slotID: slot.id)
         }
         return slot.variants.first { isVariant($0, includedIn: targetID) }
+    }
+
+    private func selectedVariantID(
+        for slotID: String,
+        targetID: String,
+        variantSelections: [String: String]
+    ) -> String? {
+        let targetPrefix = "\(slotID)@"
+        let targetMatches = variantSelections
+            .compactMap { key, variantID -> (pattern: String, variantID: String)? in
+                guard key.hasPrefix(targetPrefix) else {
+                    return nil
+                }
+                let pattern = String(key.dropFirst(targetPrefix.count))
+                return Self.matches(pattern: pattern, value: targetID)
+                    ? (pattern, variantID)
+                    : nil
+            }
+            .sorted { lhs, rhs in
+                Self.patternSpecificity(lhs.pattern) > Self.patternSpecificity(rhs.pattern)
+            }
+        return targetMatches.first?.variantID ?? variantSelections[slotID]
     }
 
     private func resolveVariantGroup(in sceneSet: SceneSetManifest) throws -> SceneSetVariantGroup? {

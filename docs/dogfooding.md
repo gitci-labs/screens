@@ -11,7 +11,7 @@ gitci-screens init . --name "My App" --github-workflow
 ```
 
 This creates `gitci/screens` with a minimal renderable scene set.
-The optional workflow writes `.github/workflows/gitci-screens.yml` so CI can build, gallery, archive, and upload screenshot zips.
+The optional workflow writes `.github/workflows/gitci-screens.yml` so CI can build, gallery, archive, upload screenshot zips, and run a separate overflow render check with `qps-overflow`.
 
 ## 2. Create a Templated Set
 
@@ -58,10 +58,10 @@ Use `--overflow-locale` when you want a deliberately harsher long-string pass:
 
 ```sh
 gitci-screens validate . --scene-set launch --strict --overflow-locale
-gitci-screens build . --scene-set launch --overflow-locale
+gitci-screens build . --scene-set launch --overflow-locale --fail-on-overflow
 ```
 
-That adds `qps-overflow`, a synthetic locale that repeats localized fallback copy until it is long enough to catch brittle text containers.
+That adds `qps-overflow`, a synthetic locale that repeats localized fallback copy until it is long enough to catch brittle text containers. `--fail-on-overflow` asks the Playwright renderer to fail when it sees clipped DOM overflow, which is useful for CI stress renders.
 
 If the scene set declares `variantGroups` for Product Page Optimization or custom product page work, validate every group before spending time rendering pixels:
 

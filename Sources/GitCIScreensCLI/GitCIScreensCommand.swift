@@ -889,8 +889,9 @@ struct Init: ParsableCommand {
                   screenshots:
                     runs-on: ubuntu-latest
                     steps:
-                      - uses: actions/checkout@v6
+                      - uses: actions/checkout@v4
                       - run: docker run --rm -v "$PWD":/workspace ghcr.io/gitci-labs/screens:main export /workspace --strict
+                      - run: docker run --rm -v "$PWD":/workspace ghcr.io/gitci-labs/screens:main build /workspace --strict --overflow-locale --fail-on-overflow --out /workspace/gitci/screens/build/overflow-check
                       - uses: actions/upload-artifact@v4
                         with:
                           name: gitci-screens

@@ -3,6 +3,13 @@
   "schemaVersion": 1,
   "id": "com.gitci.examples.minimal",
   "name": "Minimal GitCI Screens Example",
+  "sources": [
+    {
+      "id": "gitci.core",
+      "kind": "local",
+      "path": "../../../../templates/gitci/screens"
+    }
+  ],
   "defaultSceneSet": "launch",
   "assetPolicy": {
     "allowRemoteAssets": false

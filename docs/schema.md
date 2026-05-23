@@ -11,12 +11,21 @@ Phase 1 uses versioned JSON manifests that Swift can parse without executing Rea
   "schemaVersion": 1,
   "id": "com.example.todo.gitci-screens",
   "name": "Todo App Screens",
+  "sources": [
+    {
+      "id": "gitci.core",
+      "kind": "local",
+      "path": "../../../../templates/gitci/screens"
+    }
+  ],
   "defaultSceneSet": "launch",
   "assetPolicy": {
     "allowRemoteAssets": false
   }
 }
 ```
+
+`sources` can point at local reusable template roots that contain a `packs` directory. `githubRelease` sources are part of the schema but are not downloaded by the MVP yet; packaged and cached template releases are discovered separately.
 
 ## Scene Set
 

@@ -43,6 +43,8 @@ The current built-in App Store targets are:
 
 By convention, a project has a `gitci/screens` directory containing `project.gitci.json`, assets, and one or more `scene-sets`.
 
+Projects can declare reusable template roots in `project.gitci.json` with local `sources`; packaged installs can also provide `GITCI_SCREENS_TEMPLATES_ROOT`.
+
 `build` writes `manifest.gitci-output.json` next to the render plan. `gallery` writes a static HTML index under the selected scene set build directory.
 
 ## Current Scope

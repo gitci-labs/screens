@@ -18,7 +18,7 @@ public struct ScreensWorkspace: Sendable {
         if sceneSets.isEmpty {
             throw ScreensError.noSceneSets(rootURL)
         }
-        let catalog = try loadTemplateCatalog(rootURL: rootURL)
+        let catalog = try loadTemplateCatalog(rootURL: rootURL, project: project)
 
         return ScreensWorkspace(
             rootURL: rootURL,
@@ -84,7 +84,7 @@ public struct ScreensWorkspace: Sendable {
             }
     }
 
-    private static func loadTemplateCatalog(rootURL: URL) throws -> TemplateCatalog {
+    private static func loadTemplateCatalog(rootURL: URL, project: ProjectManifest?) throws -> TemplateCatalog {
         var catalog = TemplateCatalog(
             packs: [],
             targets: BuiltInCatalog.targetProfiles,
@@ -94,16 +94,48 @@ public struct ScreensWorkspace: Sendable {
             themes: [:]
         )
 
-        for templatesRoot in templateRoots(projectRoot: rootURL) {
+        for templatesRoot in templateRoots(projectRoot: rootURL, project: project) {
             try mergeTemplateRoot(templatesRoot, into: &catalog)
         }
         catalog.packs.sort { $0.id < $1.id }
         return catalog
     }
 
-    private static func templateRoots(projectRoot: URL) -> [URL] {
+    private static func templateRoots(projectRoot: URL, project: ProjectManifest?) -> [URL] {
         var roots: [URL] = [projectRoot]
         let fm = FileManager.default
+        for source in project?.sources ?? [] where source.kind == "local" {
+            guard let path = source.path else {
+                continue
+            }
+            let sourceURL = URL(fileURLWithPath: path, relativeTo: projectRoot)
+                .standardizedFileURL
+            if fm.fileExists(atPath: sourceURL.appendingPathComponent("packs").path) {
+                roots.append(sourceURL)
+            }
+        }
+        if let home = fm.homeDirectoryForCurrentUser.path.nilIfEmpty {
+            let cacheURL = URL(fileURLWithPath: home)
+                .appendingPathComponent(".gitci")
+                .appendingPathComponent("screens")
+                .appendingPathComponent("templates")
+                .appendingPathComponent("gitci-screens-templates")
+            if let versions = try? fm.contentsOfDirectory(
+                at: cacheURL,
+                includingPropertiesForKeys: [.isDirectoryKey],
+                options: [.skipsHiddenFiles]
+            ) {
+                for versionURL in versions.sorted(by: { $0.lastPathComponent > $1.lastPathComponent }) {
+                    let candidate = versionURL
+                        .appendingPathComponent("gitci")
+                        .appendingPathComponent("screens")
+                    if fm.fileExists(atPath: candidate.appendingPathComponent("packs").path) {
+                        roots.append(candidate)
+                        break
+                    }
+                }
+            }
+        }
         if let override = ProcessInfo.processInfo.environment["GITCI_SCREENS_TEMPLATES_ROOT"] {
             let overrideURL = URL(fileURLWithPath: override).standardizedFileURL
             if fm.fileExists(atPath: overrideURL.appendingPathComponent("packs").path) {
@@ -245,6 +277,12 @@ public struct ScreensWorkspace: Sendable {
                 .path
         }
         return entry
+    }
+}
+
+private extension String {
+    var nilIfEmpty: String? {
+        isEmpty ? nil : self
     }
 }
 

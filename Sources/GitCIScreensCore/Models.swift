@@ -75,8 +75,17 @@ public struct ProjectManifest: Codable, Equatable, Sendable {
     public var schemaVersion: Int
     public var id: String
     public var name: String
+    public var sources: [ProjectSource]?
     public var defaultSceneSet: String?
     public var assetPolicy: AssetPolicy?
+}
+
+public struct ProjectSource: Codable, Equatable, Sendable {
+    public var id: String
+    public var kind: String
+    public var path: String?
+    public var repo: String?
+    public var version: String?
 }
 
 public struct AssetPolicy: Codable, Equatable, Sendable {

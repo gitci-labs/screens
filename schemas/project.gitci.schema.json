@@ -9,6 +9,23 @@
     "schemaVersion": { "const": 1 },
     "id": { "type": "string", "minLength": 1 },
     "name": { "type": "string", "minLength": 1 },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "kind"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "kind": {
+            "type": "string",
+            "enum": ["local", "githubRelease"]
+          },
+          "path": { "type": "string" },
+          "repo": { "type": "string" },
+          "version": { "type": "string" }
+        }
+      }
+    },
     "defaultSceneSet": { "type": "string" },
     "assetPolicy": {
       "type": "object",

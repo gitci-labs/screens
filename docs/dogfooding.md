@@ -48,6 +48,17 @@ gitci-screens validate . --scene-set launch --strict
 ```
 
 Use `--json` in CI or editor integrations. Use `--strict` when warnings, such as a first-three screenshot missing headline text, should fail the run.
+Use `--pseudo-locale` before shipping localized screenshots to catch text expansion problems earlier:
+
+```sh
+gitci-screens validate . --scene-set launch --strict --pseudo-locale
+```
+
+If the scene set declares `variantGroups` for Product Page Optimization or custom product page work, validate every group before spending time rendering pixels:
+
+```sh
+gitci-screens validate . --scene-set launch --strict --all-variant-groups
+```
 
 ## 5. Export
 
@@ -64,6 +75,18 @@ gitci/screens/build/launch/
 The zip archive at `gitci/screens/build/launch.zip` is suitable for CI artifacts or handoff. The gallery at `gitci/screens/build/launch/gallery/index.html` shows discovered templates plus built outputs and simulated App Store gaps.
 
 If the scene set declares `locales`, export repeats the selected slots for each locale and writes files under `gitci/screens/build/launch/<locale>/<target>/...`. Keep localized marketing copy in the scene-set manifest with `{ "kind": "localized", "key": "...", "fallback": "..." }` props so the renderer still receives plain strings.
+
+If the scene set declares `variantGroups`, export one named group for a focused experiment:
+
+```sh
+gitci-screens export . --scene-set launch --strict --variant-group ppo-a
+```
+
+Or export all declared groups into separate default folders such as `gitci/screens/build/launch/baseline/` and `gitci/screens/build/launch/ppo-a/`:
+
+```sh
+gitci-screens export . --scene-set launch --strict --all-variant-groups
+```
 
 To hand the built screenshots to an existing Fastlane pipeline:
 

@@ -88,6 +88,14 @@ Or export all declared groups into separate default folders such as `gitci/scree
 gitci-screens export . --scene-set launch --strict --all-variant-groups
 ```
 
+If the project is feeding Fastlane, export all groups with a shared parent path:
+
+```sh
+gitci-screens export . --scene-set launch --strict --all-variant-groups --fastlane-out fastlane/screenshots
+```
+
+That writes one standalone Fastlane screenshot root per group, for example `fastlane/screenshots/baseline/en-US/` and `fastlane/screenshots/ppo-a/en-US/`.
+
 To hand the built screenshots to an existing Fastlane pipeline:
 
 ```sh

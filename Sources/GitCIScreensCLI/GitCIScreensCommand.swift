@@ -424,8 +424,8 @@ struct Export: AsyncParsableCommand {
             guard variantGroup == nil else {
                 throw ValidationError("Use either --variant-group or --all-variant-groups, not both.")
             }
-            guard out == nil, archiveOut == nil, fastlaneOut == nil else {
-                throw ValidationError("--all-variant-groups currently uses default per-group output, archive, and fastlane paths.")
+            guard out == nil, archiveOut == nil else {
+                throw ValidationError("--all-variant-groups currently uses default per-group output and archive paths.")
             }
             let context = try BuildContext(
                 path: path,
@@ -438,14 +438,17 @@ struct Export: AsyncParsableCommand {
                 throw ValidationError("Scene set \(context.sceneSet.id) does not declare variantGroups.")
             }
             for group in groups {
-                try await runOne(variantGroup: group.id)
+                let groupFastlaneOut = fastlaneOut.map {
+                    Self.appendingPathComponent(BuildContext.pathComponent(group.id), to: $0)
+                }
+                try await runOne(variantGroup: group.id, fastlaneOut: groupFastlaneOut)
             }
             return
         }
-        try await runOne(variantGroup: variantGroup)
+        try await runOne(variantGroup: variantGroup, fastlaneOut: fastlaneOut)
     }
 
-    private func runOne(variantGroup: String?) async throws {
+    private func runOne(variantGroup: String?, fastlaneOut: String?) async throws {
         let context = try BuildContext(
             path: path,
             sceneSet: sceneSet,
@@ -527,6 +530,13 @@ struct Export: AsyncParsableCommand {
         if let fastlaneURL {
             print("fastlane: \(fastlaneURL.path)")
         }
+    }
+
+    private static func appendingPathComponent(_ component: String, to path: String) -> String {
+        guard !path.hasSuffix("/") else {
+            return "\(path)\(component)"
+        }
+        return "\(path)/\(component)"
     }
 }
 

@@ -7,10 +7,13 @@ Last reviewed: 2026-05-23.
 Best-in-class screenshot tools are converging on a few workflow promises:
 
 - Design once, export every store/device/locale. AppScreens emphasizes responsive layouts, 150+ template sets, 500+ editable layouts, App Store/Google Play exports, localization, and direct App Store Connect / Google Play publishing: https://appscreens.com/
+- Screenshot Pilot, LocalizeShots, Appure, Shotlingo, and LaunchShot all position localization and batch export as core workflow accelerators, not premium edge cases.
+- Newer AI-first tools such as MagicScreenshots and Storeshots are pushing fast first drafts, headline generation, palette extraction, and screenshot reordering. GitCI Screens should use those ideas as optional helpers later, while keeping source-controlled deterministic output as the durable product advantage.
 - Localization is a primary buying reason, not an edge feature. AppScreens, Screenshot Pilot, LocalizeShots, MakeAppShots, and several recent indie tools all lead with multi-language export because text expansion, repeated manual exports, and locale folder organization are the pain.
 - AI is being used for first-draft marketing copy, palette extraction, screenshot ordering, translation, and dynamic backgrounds. These are useful accelerators, but the durable value is deterministic regeneration from project state.
 - CI and App Store Connect integration are differentiators for serious teams. Fastlane remains the automation baseline: `snapshot` captures raw app screenshots, `frameit`/`frame_screenshots` prepares framed assets, and `deliver`/ASC upload workflows expect predictable `fastlane/screenshots/<locale>/...` layout.
 - Users want fast iteration across product-page experiments. AppScreens explicitly calls out custom product pages and product page optimization variants. GitCI Screens should treat scene set variants as first-class build outputs, not just editor options.
+- Apple's App Store Connect screenshot specs and product-page optimization docs keep the need for data-driven target profiles, first-three screenshot ordering, and screenshot/app-preview experiments current: https://developer.apple.com/help/app-store-connect/reference/screenshot-specifications and https://developer.apple.com/app-store/product-page-optimization/
 
 ## Product Implications For GitCI Screens
 
@@ -25,8 +28,8 @@ GitCI Screens should win by being reproducible and developer-native:
 
 ## Near-Term Priorities
 
-1. Add pseudo-localization validation and an overflow smoke test mode for long strings.
-2. Add variant build groups so a scene set can emit `baseline`, `ppo-a`, `ppo-b`, or custom product page folders.
+1. Add an overflow smoke test mode for long strings on top of the current pseudo-localization output.
+2. Improve variant groups into a reviewable experiment surface: all-groups validation is in place; next add gallery grouping, ZIP naming, and Fastlane/custom product page packaging conventions.
 3. Add direct App Store Connect upload as an optional exporter after the Fastlane layout is stable.
 4. Improve gallery previews into a review surface: target tabs, locale tabs, first-three screenshot emphasis, and split-scene reconstruction with display gaps.
 5. Add GUI import/build flow on macOS before editing: local directory bookmark, discovery, build button, gallery preview, reveal/share output.

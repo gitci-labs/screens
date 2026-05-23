@@ -31,7 +31,7 @@ GitCI Screens should win by being reproducible and developer-native:
 ## Near-Term Priorities
 
 1. Add visual overflow detection on top of the current `qps-overflow` long-string stress locale.
-2. Improve variant groups into a reviewable experiment surface: all-groups validation, grouped Fastlane roots, and first-three gallery badges are in place; next add ZIP naming and custom product page packaging conventions.
+2. Improve variant groups into a reviewable experiment surface: all-groups validation, grouped Fastlane roots, first-three gallery badges, per-group archive names, and an all-groups export index are in place; next add custom product page packaging conventions.
 3. Add direct App Store Connect upload as an optional exporter after the Fastlane layout is stable.
 4. Improve gallery previews into a review surface: target tabs, locale tabs, first-three screenshot emphasis, and split-scene reconstruction with display gaps.
 5. Continue hardening the GUI import/build loop: persisted local directory and git clone import, scene-set build actions, gallery preview, reveal/share output, then template source bootstrap/update.

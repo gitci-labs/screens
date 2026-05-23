@@ -455,18 +455,34 @@ struct Export: AsyncParsableCommand {
             guard !groups.isEmpty else {
                 throw ValidationError("Scene set \(context.sceneSet.id) does not declare variantGroups.")
             }
+            var results: [VariantGroupExportRecord] = []
             for group in groups {
                 let groupFastlaneOut = fastlaneOut.map {
                     Self.appendingPathComponent(BuildContext.pathComponent(group.id), to: $0)
                 }
-                try await runOne(variantGroup: group.id, fastlaneOut: groupFastlaneOut)
+                results.append(try await runOne(variantGroup: group.id, fastlaneOut: groupFastlaneOut))
             }
+            let manifestURL = context.screensRoot
+                .appendingPathComponent("build")
+                .appendingPathComponent(context.sceneSet.id)
+                .appendingPathComponent("variant-groups.gitci-export.json")
+            try FileManager.default.createDirectory(
+                at: manifestURL.deletingLastPathComponent(),
+                withIntermediateDirectories: true
+            )
+            try JSONEncoder.gitci.encode(VariantGroupExportManifest(
+                schemaVersion: 1,
+                sceneSetId: context.sceneSet.id,
+                generatedAt: Self.timestamp(),
+                groups: results
+            )).write(to: manifestURL)
+            print("variantGroups: \(manifestURL.path)")
             return
         }
-        try await runOne(variantGroup: variantGroup, fastlaneOut: fastlaneOut)
+        _ = try await runOne(variantGroup: variantGroup, fastlaneOut: fastlaneOut)
     }
 
-    private func runOne(variantGroup: String?, fastlaneOut: String?) async throws {
+    private func runOne(variantGroup: String?, fastlaneOut: String?) async throws -> VariantGroupExportRecord {
         let context = try BuildContext(
             path: path,
             sceneSet: sceneSet,
@@ -550,6 +566,13 @@ struct Export: AsyncParsableCommand {
         if let fastlaneURL {
             print("fastlane: \(fastlaneURL.path)")
         }
+        return VariantGroupExportRecord(
+            id: variantGroup ?? "default",
+            outputPath: context.outputURL.path,
+            galleryPath: galleryIndexURL?.path,
+            archivePath: archiveURL?.path,
+            fastlanePath: fastlaneURL?.path
+        )
     }
 
     private static func appendingPathComponent(_ component: String, to path: String) -> String {
@@ -557,6 +580,27 @@ struct Export: AsyncParsableCommand {
             return "\(path)\(component)"
         }
         return "\(path)/\(component)"
+    }
+
+    private static func timestamp() -> String {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter.string(from: Date())
+    }
+
+    private struct VariantGroupExportManifest: Encodable {
+        var schemaVersion: Int
+        var sceneSetId: String
+        var generatedAt: String
+        var groups: [VariantGroupExportRecord]
+    }
+
+    private struct VariantGroupExportRecord: Encodable {
+        var id: String
+        var outputPath: String
+        var galleryPath: String?
+        var archivePath: String?
+        var fastlanePath: String?
     }
 }
 
@@ -1524,6 +1568,7 @@ private struct BuildContext {
         return LoadedBuildContext(
             workspace: workspace,
             sceneSet: selectedSceneSet,
+            screensRoot: screensRoot,
             outputURL: outputURL,
             planURL: outputURL.appendingPathComponent("plan.gitci-render.json"),
             plan: plan
@@ -1543,6 +1588,7 @@ private struct BuildContext {
 private struct LoadedBuildContext {
     var workspace: ScreensWorkspace
     var sceneSet: LoadedSceneSet
+    var screensRoot: URL
     var outputURL: URL
     var planURL: URL
     var plan: RenderPlan

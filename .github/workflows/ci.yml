@@ -48,9 +48,16 @@ jobs:
       - run: cd js && pnpm build
       - run: cd js && pnpm --filter @gitci/screens-renderer-node exec playwright install --with-deps chromium
       - run: swift build
+      - run: .build/debug/gitci-screens doctor examples/minimal
       - run: .build/debug/gitci-screens validate examples/minimal
       - run: .build/debug/gitci-screens build examples/minimal
       - run: .build/debug/gitci-screens gallery examples/minimal
+      - run: |
+          tmpdir="$(mktemp -d)"
+          .build/debug/gitci-screens init "$tmpdir" --name "CI Init Smoke"
+          .build/debug/gitci-screens validate "$tmpdir"
+          .build/debug/gitci-screens build "$tmpdir"
+          test -f "$tmpdir/gitci/screens/build/launch/appstore.iphone.6_9.portrait/01-hero.png"
       - run: test -f examples/minimal/gitci/screens/build/launch/appstore.iphone.6_9.portrait/01-hero.png
       - run: test -f examples/minimal/gitci/screens/build/launch/appstore.iphone.6_9.portrait/02-workflow.png
       - run: test -f examples/minimal/gitci/screens/build/launch/appstore.iphone.6_9.portrait/03-span-1.png

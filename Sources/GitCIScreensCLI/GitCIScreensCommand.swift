@@ -186,6 +186,13 @@ struct Build: AsyncParsableCommand {
 
     func run() async throws {
         let context = try BuildContext(path: path, sceneSet: sceneSet, out: out).load()
+        let report = ProjectValidator(workspace: context.workspace).validate(sceneSet: context.sceneSet)
+        for diagnostic in report.diagnostics {
+            printError("\(diagnostic.severity.rawValue): \(diagnostic.code): \(diagnostic.message)")
+        }
+        if report.hasErrors {
+            throw ExitCode.failure
+        }
         try context.writePlan()
         try await RendererInvoker(renderer: renderer).render(planURL: context.planURL)
         try context.writeOutputManifest()
@@ -363,11 +370,19 @@ private struct BuildContext {
             sceneSet: selectedSceneSet,
             outputDirectory: outputURL
         )
-        return LoadedBuildContext(outputURL: outputURL, planURL: outputURL.appendingPathComponent("plan.gitci-render.json"), plan: plan)
+        return LoadedBuildContext(
+            workspace: workspace,
+            sceneSet: selectedSceneSet,
+            outputURL: outputURL,
+            planURL: outputURL.appendingPathComponent("plan.gitci-render.json"),
+            plan: plan
+        )
     }
 }
 
 private struct LoadedBuildContext {
+    var workspace: ScreensWorkspace
+    var sceneSet: LoadedSceneSet
     var outputURL: URL
     var planURL: URL
     var plan: RenderPlan
@@ -397,4 +412,8 @@ private struct DiscoverySummary: Codable {
 private struct DiscoverySceneSet: Codable {
     var id: String
     var name: String?
+}
+
+private func printError(_ value: String) {
+    FileHandle.standardError.write(Data((value + "\n").utf8))
 }

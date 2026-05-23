@@ -22,6 +22,8 @@ jobs:
           cache: pnpm
           cache-dependency-path: js/pnpm-lock.yaml
       - run: cd js && pnpm install --frozen-lockfile && pnpm build
+      - run: cd js && pnpm test
+      - run: swift test
       - run: swift build -c release
       - run: scripts/package-release.sh gitci-screens-linux-x86_64 .build/release/gitci-screens
       - uses: softprops/action-gh-release@v2

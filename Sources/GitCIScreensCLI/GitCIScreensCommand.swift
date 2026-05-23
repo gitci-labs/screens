@@ -523,7 +523,7 @@ struct Init: ParsableCommand {
                   screenshots:
                     runs-on: ubuntu-latest
                     steps:
-                      - uses: actions/checkout@v4
+                      - uses: actions/checkout@v6
                       - run: docker run --rm -v "$PWD":/workspace ghcr.io/gitci-labs/screens:main export /workspace --strict
                       - uses: actions/upload-artifact@v4
                         with:

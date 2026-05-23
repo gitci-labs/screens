@@ -62,6 +62,8 @@ jobs:
             --version v0.0.0 \
             --archive "$tmpdir/$package.tar.gz" \
             --cache-root "$tmpdir/cache"
+          .build/debug/gitci-screens templates list --cache-root "$tmpdir/cache"
+          .build/debug/gitci-screens templates list --cache-root "$tmpdir/cache" --json
           test -d "$tmpdir/cache/screens-templates/v0.0.0/gitci/screens/packs"
       - run: .build/debug/gitci-screens build examples/minimal
       - run: .build/debug/gitci-screens gallery examples/minimal

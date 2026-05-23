@@ -25,7 +25,7 @@ Phase 1 uses versioned JSON manifests that Swift can parse without executing Rea
 }
 ```
 
-`sources` can point at local reusable template roots that contain a `packs` directory. `githubRelease` sources resolve from the local template cache; install a release archive with `gitci-screens templates install --repo gitci-labs/screens-templates --version v0.1.0`. The CLI looks under `~/.gitci/screens/templates/<repo-name>/<version>/gitci/screens`; for example `gitci-labs/screens-templates` version `v0.1.0` resolves to `~/.gitci/screens/templates/screens-templates/v0.1.0/gitci/screens`. `GITCI_SCREENS_TEMPLATE_CACHE_ROOT` can override the cache root. Packaged template roots and `GITCI_SCREENS_TEMPLATES_ROOT` are also discovered.
+`sources` can point at local reusable template roots that contain a `packs` directory. `githubRelease` sources resolve from the local template cache; install a release archive with `gitci-screens templates install --repo gitci-labs/screens-templates --version v0.1.0` and inspect installed releases with `gitci-screens templates list --json`. The CLI looks under `~/.gitci/screens/templates/<repo-name>/<version>/gitci/screens`; for example `gitci-labs/screens-templates` version `v0.1.0` resolves to `~/.gitci/screens/templates/screens-templates/v0.1.0/gitci/screens`. `GITCI_SCREENS_TEMPLATE_CACHE_ROOT` can override the cache root. Packaged template roots and `GITCI_SCREENS_TEMPLATES_ROOT` are also discovered.
 
 ## Scene Set
 

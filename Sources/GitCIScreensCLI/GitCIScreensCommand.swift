@@ -369,9 +369,24 @@ struct Templates: AsyncParsableCommand {
         commandName: "templates",
         abstract: "Manage cached GitCI Screens template releases.",
         subcommands: [
-            Install.self
+            Install.self,
+            List.self
         ]
     )
+
+    static func resolvedCacheRoot(_ cacheRoot: String?) -> URL {
+        if let cacheRoot {
+            return URL(fileURLWithPath: cacheRoot).standardizedFileURL
+        }
+        if let override = ProcessInfo.processInfo.environment["GITCI_SCREENS_TEMPLATE_CACHE_ROOT"], !override.isEmpty {
+            return URL(fileURLWithPath: override).standardizedFileURL
+        }
+        return FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent(".gitci")
+            .appendingPathComponent("screens")
+            .appendingPathComponent("templates")
+            .standardizedFileURL
+    }
 
     struct Install: AsyncParsableCommand {
         static let configuration = CommandConfiguration(
@@ -402,23 +417,9 @@ struct Templates: AsyncParsableCommand {
                 archiveURL: archiveURL,
                 repo: repo,
                 version: version,
-                cacheRoot: Self.resolvedCacheRoot(cacheRoot)
+                cacheRoot: Templates.resolvedCacheRoot(cacheRoot)
             )
             print(installedURL.path)
-        }
-
-        private static func resolvedCacheRoot(_ cacheRoot: String?) -> URL {
-            if let cacheRoot {
-                return URL(fileURLWithPath: cacheRoot).standardizedFileURL
-            }
-            if let override = ProcessInfo.processInfo.environment["GITCI_SCREENS_TEMPLATE_CACHE_ROOT"], !override.isEmpty {
-                return URL(fileURLWithPath: override).standardizedFileURL
-            }
-            return FileManager.default.homeDirectoryForCurrentUser
-                .appendingPathComponent(".gitci")
-                .appendingPathComponent("screens")
-                .appendingPathComponent("templates")
-                .standardizedFileURL
         }
 
         private static func downloadArchive(repo: String, version: String) async throws -> URL {
@@ -436,6 +437,38 @@ struct Templates: AsyncParsableCommand {
                 .appendingPathExtension("tar.gz")
             try FileManager.default.moveItem(at: temporaryURL, to: destinationURL)
             return destinationURL
+        }
+    }
+
+    struct List: ParsableCommand {
+        static let configuration = CommandConfiguration(
+            abstract: "List template releases installed in the local cache."
+        )
+
+        @Option(name: .long, help: "Template cache root. Defaults to ~/.gitci/screens/templates.")
+        var cacheRoot: String?
+
+        @Flag(name: .long, help: "Print JSON.")
+        var json = false
+
+        func run() throws {
+            let cacheRootURL = Templates.resolvedCacheRoot(cacheRoot)
+            let records = try TemplateArchiveInstaller.list(cacheRoot: cacheRootURL)
+            if json {
+                let summary = TemplateCacheSummary(cacheRoot: cacheRootURL.path, releases: records)
+                let data = try JSONEncoder.gitci.encode(summary)
+                print(String(decoding: data, as: UTF8.self))
+                return
+            }
+
+            print("Template cache: \(cacheRootURL.path)")
+            if records.isEmpty {
+                print("No template releases installed.")
+                return
+            }
+            for record in records {
+                print("  - \(record.repo) \(record.version) \(record.path)")
+            }
         }
     }
 }
@@ -464,6 +497,51 @@ private enum TemplateArchiveInstaller {
         )
         try FileManager.default.copyItem(at: packageURL, to: destinationURL)
         return destinationURL
+    }
+
+    static func list(cacheRoot: URL) throws -> [TemplateCacheRecord] {
+        guard FileManager.default.fileExists(atPath: cacheRoot.path) else {
+            return []
+        }
+        let repositories = try FileManager.default.contentsOfDirectory(
+            at: cacheRoot,
+            includingPropertiesForKeys: [.isDirectoryKey],
+            options: [.skipsHiddenFiles]
+        )
+        var records: [TemplateCacheRecord] = []
+        for repository in repositories {
+            guard try repository.resourceValues(forKeys: [.isDirectoryKey]).isDirectory == true else {
+                continue
+            }
+            let versions = try FileManager.default.contentsOfDirectory(
+                at: repository,
+                includingPropertiesForKeys: [.isDirectoryKey],
+                options: [.skipsHiddenFiles]
+            )
+            for version in versions {
+                guard try version.resourceValues(forKeys: [.isDirectoryKey]).isDirectory == true else {
+                    continue
+                }
+                guard FileManager.default.fileExists(
+                    atPath: version.appendingPathComponent("gitci/screens/packs").path
+                ) else {
+                    continue
+                }
+                records.append(
+                    TemplateCacheRecord(
+                        repo: repository.lastPathComponent,
+                        version: version.lastPathComponent,
+                        path: version.path
+                    )
+                )
+            }
+        }
+        return records.sorted {
+            if $0.repo == $1.repo {
+                return $0.version < $1.version
+            }
+            return $0.repo < $1.repo
+        }
     }
 
     static func cacheDestination(repo: String, version: String, cacheRoot: URL) throws -> URL {
@@ -511,6 +589,17 @@ private enum TemplateArchiveInstaller {
         }
         throw ValidationError("Template archive does not contain gitci/screens/packs.")
     }
+}
+
+private struct TemplateCacheSummary: Codable {
+    var cacheRoot: String
+    var releases: [TemplateCacheRecord]
+}
+
+private struct TemplateCacheRecord: Codable {
+    var repo: String
+    var version: String
+    var path: String
 }
 
 private struct BuildContext {

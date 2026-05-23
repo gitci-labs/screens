@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { createSpanLayout, frameRect, gapRect } from '../packages/react/src/index'
+import {
+  createSpanLayout,
+  firstFrameRect,
+  frameRect,
+  gapEdgeX,
+  gapRect,
+  insetRect,
+  lastFrameRect
+} from '../packages/react/src/index'
 
 describe('span layout helpers', () => {
   it('describes frame and gap edges for spanned scenes', () => {
@@ -41,5 +49,29 @@ describe('span layout helpers', () => {
 
     expect(frameRect(context, 1).left).toBe(1400)
     expect(gapRect(context, 0)?.width).toBe(80)
+  })
+
+  it('exposes stable frame and gap-edge anchors for template layout', () => {
+    const context = {
+      slotId: 'span',
+      variantId: 'default',
+      target: {
+        id: 'appstore.iphone.6_9.portrait',
+        width: 1320,
+        height: 2868,
+        displayGapPx: 80,
+        appearance: 'light' as const
+      },
+      span: 3,
+      compositeWidth: 4120,
+      compositeHeight: 2868,
+      themeVars: {}
+    }
+
+    expect(firstFrameRect(context).left).toBe(0)
+    expect(lastFrameRect(context).left).toBe(2800)
+    expect(gapEdgeX(context, 0, 'before')).toBe(1320)
+    expect(gapEdgeX(context, 0, 'after')).toBe(1400)
+    expect(insetRect(lastFrameRect(context), 96).left).toBe(2896)
   })
 })

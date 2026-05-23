@@ -51,17 +51,22 @@ frame 0 | hidden gap | frame 1
 The gap is intentionally not exported into either PNG. Templates should avoid putting important copy or UI controls across that hidden band. Use the helpers from `@gitci/screens-react`:
 
 ```tsx
-import { frameRect, gapRect, insetRect } from '@gitci/screens-react'
+import {
+  firstFrameRect,
+  gapEdgeX,
+  insetRect,
+  lastFrameRect
+} from '@gitci/screens-react'
 
-const firstFrame = frameRect(context, 0)
+const firstFrame = firstFrameRect(context)
 const safeTextArea = insetRect(firstFrame, 96)
-const firstGap = gapRect(context, 0)
-const secondFrame = frameRect(context, 1)
+const deviceFrame = insetRect(lastFrameRect(context), 96)
+const firstGapTrailingEdge = gapEdgeX(context, 0, 'after')
 
-const imageLeft = firstGap ? firstGap.right + 96 : safeTextArea.left
+const imageLeft = firstGapTrailingEdge ? firstGapTrailingEdge + 96 : deviceFrame.left
 ```
 
-`frameRect` returns upload-frame edges in composite pixels. `gapRect` returns the skipped inter-frame band, so a wide layout can snap content to `gap.left` or `gap.right` instead of guessing where the App Store card spacing will land.
+`firstFrameRect` and `lastFrameRect` return upload-frame edges in composite pixels. `gapEdgeX` returns a skipped inter-frame band edge, so a wide layout can snap content to the exact hidden gap boundary instead of guessing where App Store card spacing will land.
 
 ## Device Components
 

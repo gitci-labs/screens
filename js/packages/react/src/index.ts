@@ -92,6 +92,8 @@ export type SpanGapRect = SpanRect & {
   afterFrameIndex: number
 }
 
+export type SpanGapEdge = 'before' | 'after'
+
 export type SpanLayout = {
   span: number
   frameWidth: number
@@ -193,8 +195,26 @@ export function frameRect(context: RenderSceneContext, index: number): SpanRect 
   return rect
 }
 
+export function firstFrameRect(context: RenderSceneContext): SpanRect {
+  return frameRect(context, 0)
+}
+
+export function lastFrameRect(context: RenderSceneContext): SpanRect {
+  return frameRect(context, spanLayout(context).frames.length - 1)
+}
+
 export function gapRect(context: RenderSceneContext, index: number): SpanGapRect | undefined {
   return spanLayout(context).gaps[index]
+}
+
+export function gapEdgeX(
+  context: RenderSceneContext,
+  index: number,
+  edge: SpanGapEdge
+): number | undefined {
+  const gap = gapRect(context, index)
+  if (!gap) return undefined
+  return edge === 'before' ? gap.left : gap.right
 }
 
 export function insetRect(rect: SpanRect, inset: number): SpanRect {

@@ -9,6 +9,25 @@ public struct ProjectDiagnostic: Codable, Equatable, Sendable {
     public var severity: DiagnosticSeverity
     public var code: String
     public var message: String
+    public var targetId: String?
+    public var outputPath: String?
+    public var sourceId: String?
+
+    public init(
+        severity: DiagnosticSeverity,
+        code: String,
+        message: String,
+        targetId: String? = nil,
+        outputPath: String? = nil,
+        sourceId: String? = nil
+    ) {
+        self.severity = severity
+        self.code = code
+        self.message = message
+        self.targetId = targetId
+        self.outputPath = outputPath
+        self.sourceId = sourceId
+    }
 }
 
 public struct ValidationReport: Codable, Equatable, Sendable {
@@ -61,7 +80,8 @@ public struct ProjectValidator: Sendable {
                 warnings.append(ProjectDiagnostic(
                     severity: .warning,
                     code: "target.output-size-not-accepted",
-                    message: "\(target.id) renders \(target.width)x\(target.height), which is not listed in acceptedSizes."
+                    message: "\(target.id) renders \(target.width)x\(target.height), which is not listed in acceptedSizes.",
+                    targetId: target.id
                 ))
             }
             for output in target.outputs.prefix(3) {
@@ -69,7 +89,9 @@ public struct ProjectValidator: Sendable {
                     warnings.append(ProjectDiagnostic(
                         severity: .warning,
                         code: "metadata.first-three-missing-headline",
-                        message: "\(target.id) \(output.outputPath) is in the first three screenshots and has no headline."
+                        message: "\(target.id) \(output.outputPath) is in the first three screenshots and has no headline.",
+                        targetId: target.id,
+                        outputPath: output.outputPath
                     ))
                 }
             }
@@ -86,7 +108,8 @@ public struct ProjectValidator: Sendable {
             return ProjectDiagnostic(
                 severity: .warning,
                 code: "project.source-not-downloaded",
-                message: "Project source \(source.id) uses kind \(source.kind); this MVP only resolves local, packaged, cached, and environment-provided template roots."
+                message: "Project source \(source.id) uses kind \(source.kind); this MVP only resolves local, packaged, cached, and environment-provided template roots.",
+                sourceId: source.id
             )
         }
     }

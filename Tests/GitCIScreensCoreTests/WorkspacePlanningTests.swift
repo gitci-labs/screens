@@ -56,6 +56,26 @@ final class WorkspacePlanningTests: XCTestCase {
         XCTAssertEqual(report.diagnostics, [])
     }
 
+    func testValidationDiagnosticsCarryStructuredContext() throws {
+        let root = try exampleRoot()
+        let workspace = try ScreensWorkspace.load(root: root)
+        var sceneSet = try workspace.resolveSceneSet(id: "launch")
+        sceneSet.manifest.slots[0].variants[0].props = .object([
+            "headline": .string(""),
+            "screenshot": .object([
+                "kind": .string("asset"),
+                "path": .string("../../assets/iphone/inbox.svg")
+            ])
+        ])
+        let report = ProjectValidator(workspace: workspace).validate(sceneSet: sceneSet)
+        let diagnostic = try XCTUnwrap(report.diagnostics.first {
+            $0.code == "metadata.first-three-missing-headline"
+        })
+
+        XCTAssertEqual(diagnostic.targetId, "appstore.iphone.6_9.portrait")
+        XCTAssertEqual(diagnostic.outputPath, "appstore.iphone.6_9.portrait/01-hero.png")
+    }
+
     func testOutputManifestCarriesSpanClipMetadata() throws {
         let root = try exampleRoot()
         let workspace = try ScreensWorkspace.load(root: root)

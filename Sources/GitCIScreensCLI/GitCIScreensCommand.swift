@@ -430,7 +430,8 @@ struct SceneSets: ParsableCommand {
         commandName: "scene-sets",
         abstract: "Create and manage project scene sets.",
         subcommands: [
-            Create.self
+            Create.self,
+            FillAssets.self
         ]
     )
 
@@ -505,7 +506,7 @@ struct SceneSets: ParsableCommand {
             print(manifestURL.path)
         }
 
-        private static func parseAssetOverrides(_ values: [String]) throws -> [String: URL] {
+        fileprivate static func parseAssetOverrides(_ values: [String]) throws -> [String: URL] {
             var overrides: [String: URL] = [:]
             for value in values {
                 guard let separator = value.firstIndex(of: "=") else {
@@ -525,7 +526,7 @@ struct SceneSets: ParsableCommand {
             return overrides
         }
 
-        private static func applyAssetOverrides(
+        fileprivate static func applyAssetOverrides(
             _ overrides: [String: URL],
             to sceneSet: SceneSetManifest,
             sceneSetRoot: URL
@@ -559,7 +560,7 @@ struct SceneSets: ParsableCommand {
             return updated
         }
 
-        private static func replaceAssetRefs(
+        fileprivate static func replaceAssetRefs(
             in value: JSONValue,
             sceneSetDirectory: URL,
             overrides: [String: URL],
@@ -688,7 +689,7 @@ struct SceneSets: ParsableCommand {
                 .replacingOccurrences(of: "\"", with: "&quot;")
         }
 
-        private static func relativePath(from directory: URL, to target: URL) -> String {
+        fileprivate static func relativePath(from directory: URL, to target: URL) -> String {
             let baseComponents = directory.standardizedFileURL.pathComponents
             let targetComponents = target.standardizedFileURL.pathComponents
             var sharedCount = 0
@@ -701,6 +702,47 @@ struct SceneSets: ParsableCommand {
             let targetSteps = targetComponents.dropFirst(sharedCount)
             let path = (parentSteps + targetSteps).joined(separator: "/")
             return path.isEmpty ? "." : path
+        }
+    }
+
+    struct FillAssets: ParsableCommand {
+        static let configuration = CommandConfiguration(
+            commandName: "fill-assets",
+            abstract: "Copy screenshots into an existing scene set and update matching asset references."
+        )
+
+        @Argument(help: "Project path. Defaults to current directory.")
+        var path: String = "."
+
+        @Option(name: .long, help: "Scene set id.")
+        var sceneSet: String?
+
+        @Option(
+            name: .long,
+            parsing: .upToNextOption,
+            help: "Asset override in name=path form. The name matches an asset placeholder basename, for example hero=/path/to/screenshot.png."
+        )
+        var asset: [String] = []
+
+        func run() throws {
+            guard !asset.isEmpty else {
+                throw ValidationError("At least one --asset name=path value is required.")
+            }
+
+            let projectURL = URL(fileURLWithPath: path).standardizedFileURL
+            let screensRoot = try ScreensRootLocator.locate(from: projectURL)
+            let workspace = try ScreensWorkspace.load(root: screensRoot)
+            let loadedSceneSet = try workspace.resolveSceneSet(id: sceneSet)
+            let overrides = try Create.parseAssetOverrides(asset)
+            let updatedSceneSet = try Create.applyAssetOverrides(
+                overrides,
+                to: loadedSceneSet.manifest,
+                sceneSetRoot: loadedSceneSet.directoryURL
+            )
+            let manifestURL = loadedSceneSet.directoryURL.appendingPathComponent("scene-set.gitci.json")
+            try JSONEncoder.gitci.encode(EncodedSceneSetManifest(updatedSceneSet))
+                .write(to: manifestURL)
+            print(manifestURL.path)
         }
     }
 }

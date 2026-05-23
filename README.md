@@ -110,6 +110,7 @@ Not implemented yet:
 ## References
 
 - [Architecture](docs/architecture.md)
+- [Dogfooding workflow](docs/dogfooding.md)
 - [Schemas](docs/schema.md)
 - [Targets](docs/targets.md)
 - [Template authoring](docs/authoring-templates.md)

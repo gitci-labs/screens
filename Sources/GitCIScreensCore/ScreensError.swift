@@ -10,6 +10,8 @@ public enum ScreensError: Error, CustomStringConvertible, Equatable {
     case unknownTheme(String)
     case unknownPalette(String)
     case paletteHasNoColors(String, Appearance)
+    case projectSourceMissingPath(String)
+    case templateSourceNotFound(id: String, path: String)
     case missingVariant(slotID: String, variantID: String)
     case noVariant(slotID: String)
     case missingRequiredProp(templateID: String, prop: String)
@@ -42,6 +44,10 @@ public enum ScreensError: Error, CustomStringConvertible, Equatable {
             return "Unknown palette: \(id)."
         case let .paletteHasNoColors(id, appearance):
             return "Palette \(id) has no colors for \(appearance.rawValue)."
+        case let .projectSourceMissingPath(id):
+            return "Project source \(id) is local but has no path."
+        case let .templateSourceNotFound(id, path):
+            return "Project source \(id) does not contain a packs directory at \(path)."
         case let .missingVariant(slotID, variantID):
             return "Slot \(slotID) does not contain variant \(variantID)."
         case let .noVariant(slotID):

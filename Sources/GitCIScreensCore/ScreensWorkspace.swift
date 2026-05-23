@@ -94,25 +94,26 @@ public struct ScreensWorkspace: Sendable {
             themes: [:]
         )
 
-        for templatesRoot in templateRoots(projectRoot: rootURL, project: project) {
+        for templatesRoot in try templateRoots(projectRoot: rootURL, project: project) {
             try mergeTemplateRoot(templatesRoot, into: &catalog)
         }
         catalog.packs.sort { $0.id < $1.id }
         return catalog
     }
 
-    private static func templateRoots(projectRoot: URL, project: ProjectManifest?) -> [URL] {
+    private static func templateRoots(projectRoot: URL, project: ProjectManifest?) throws -> [URL] {
         var roots: [URL] = [projectRoot]
         let fm = FileManager.default
         for source in project?.sources ?? [] where source.kind == "local" {
-            guard let path = source.path else {
-                continue
+            guard let path = source.path, !path.isEmpty else {
+                throw ScreensError.projectSourceMissingPath(source.id)
             }
             let sourceURL = URL(fileURLWithPath: path, relativeTo: projectRoot)
                 .standardizedFileURL
-            if fm.fileExists(atPath: sourceURL.appendingPathComponent("packs").path) {
-                roots.append(sourceURL)
+            guard fm.fileExists(atPath: sourceURL.appendingPathComponent("packs").path) else {
+                throw ScreensError.templateSourceNotFound(id: source.id, path: sourceURL.path)
             }
+            roots.append(sourceURL)
         }
         if let home = fm.homeDirectoryForCurrentUser.path.nilIfEmpty {
             let cacheURL = URL(fileURLWithPath: home)

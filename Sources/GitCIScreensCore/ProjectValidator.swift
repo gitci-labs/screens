@@ -37,6 +37,7 @@ public struct ProjectValidator: Sendable {
                 outputDirectory: workspace.rootURL.appendingPathComponent("build/validation")
             )
             diagnostics.append(contentsOf: warnings(for: plan))
+            diagnostics.append(contentsOf: warningsForProjectSources())
         } catch {
             diagnostics.append(ProjectDiagnostic(
                 severity: .error,
@@ -56,6 +57,13 @@ public struct ProjectValidator: Sendable {
         var warnings: [ProjectDiagnostic] = []
 
         for target in plan.targets {
+            if !targetAcceptedSizeMatches(target) {
+                warnings.append(ProjectDiagnostic(
+                    severity: .warning,
+                    code: "target.output-size-not-accepted",
+                    message: "\(target.id) renders \(target.width)x\(target.height), which is not listed in acceptedSizes."
+                ))
+            }
             for output in target.outputs.prefix(3) {
                 if output.props.objectValue?["headline"]?.stringValue?.isEmpty ?? true {
                     warnings.append(ProjectDiagnostic(
@@ -68,5 +76,25 @@ public struct ProjectValidator: Sendable {
         }
 
         return warnings
+    }
+
+    private func warningsForProjectSources() -> [ProjectDiagnostic] {
+        (workspace.project?.sources ?? []).compactMap { source in
+            guard source.kind != "local" else {
+                return nil
+            }
+            return ProjectDiagnostic(
+                severity: .warning,
+                code: "project.source-not-downloaded",
+                message: "Project source \(source.id) uses kind \(source.kind); this MVP only resolves local, packaged, cached, and environment-provided template roots."
+            )
+        }
+    }
+
+    private func targetAcceptedSizeMatches(_ target: RenderPlanTarget) -> Bool {
+        guard let profile = workspace.targets[target.id], !profile.acceptedSizes.isEmpty else {
+            return true
+        }
+        return profile.acceptedSizes.contains([target.width, target.height])
     }
 }

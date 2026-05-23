@@ -80,7 +80,8 @@ jobs:
           PY
       - run: |
           tmpdir="$(mktemp -d)"
-          .build/debug/gitci-screens init "$tmpdir" --name "CI Init Smoke"
+          .build/debug/gitci-screens init "$tmpdir" --name "CI Init Smoke" --github-workflow
+          grep -q "gitci-labs/screens:main export /workspace" "$tmpdir/.github/workflows/gitci-screens.yml"
           python3 - <<PY
           import base64
           from pathlib import Path
@@ -93,9 +94,11 @@ jobs:
           .build/debug/gitci-screens validate "$tmpdir"
           .build/debug/gitci-screens validate "$tmpdir" --scene-set launch-template
           .build/debug/gitci-screens build "$tmpdir"
-          .build/debug/gitci-screens build "$tmpdir" --scene-set launch-template
+          .build/debug/gitci-screens export "$tmpdir" --scene-set launch-template
           test -f "$tmpdir/gitci/screens/build/launch/appstore.iphone.6_9.portrait/01-hero.png"
           test -f "$tmpdir/gitci/screens/build/launch-template/appstore.iphone.6_9.portrait/01-hero.png"
+          test -f "$tmpdir/gitci/screens/build/launch-template/gallery/index.html"
+          test -f "$tmpdir/gitci/screens/build/launch-template.zip"
           grep -q "hero.png" "$tmpdir/gitci/screens/scene-sets/launch-template/scene-set.gitci.json"
           grep -q "detail.png" "$tmpdir/gitci/screens/scene-sets/launch-template/scene-set.gitci.json"
       - run: test -f examples/minimal/gitci/screens/build/launch/appstore.iphone.6_9.portrait/01-hero.png

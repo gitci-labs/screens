@@ -16,6 +16,7 @@ struct GitCIScreensCommand: AsyncParsableCommand {
             Validate.self,
             Plan.self,
             Build.self,
+            Export.self,
             Archive.self,
             Gallery.self,
             Init.self,
@@ -226,6 +227,85 @@ struct Build: AsyncParsableCommand {
     }
 }
 
+struct Export: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        abstract: "Build screenshots, generate a gallery, and package a zip archive."
+    )
+
+    @Argument(help: "Project path. Defaults to current directory.")
+    var path: String = "."
+
+    @Option(name: .long, help: "Scene set id.")
+    var sceneSet: String?
+
+    @Option(name: .long, help: "Output directory.")
+    var out: String?
+
+    @Option(name: .long, help: "Zip output path.")
+    var archiveOut: String?
+
+    @Option(name: .long, help: "Renderer backend.")
+    var renderer: String = "node-playwright"
+
+    @Flag(name: .long, help: "Do not generate the HTML gallery.")
+    var skipGallery = false
+
+    @Flag(name: .long, help: "Do not package a zip archive.")
+    var skipArchive = false
+
+    func run() async throws {
+        let context = try BuildContext(path: path, sceneSet: sceneSet, out: out).load()
+        let report = ProjectValidator(workspace: context.workspace).validate(sceneSet: context.sceneSet)
+        for diagnostic in report.diagnostics {
+            printError("\(diagnostic.severity.rawValue): \(diagnostic.code): \(diagnostic.message)")
+        }
+        if report.hasErrors {
+            throw ExitCode.failure
+        }
+
+        try context.writePlan()
+        try await RendererInvoker(renderer: renderer).render(planURL: context.planURL)
+        try context.writeOutputManifest()
+
+        let galleryIndexURL: URL?
+        if skipGallery {
+            galleryIndexURL = nil
+        } else {
+            let galleryURL = context.outputURL.appendingPathComponent("gallery")
+            try GalleryGenerator(workspace: context.workspace).generate(
+                outputURL: galleryURL,
+                buildOutputURL: context.outputURL
+            )
+            galleryIndexURL = galleryURL.appendingPathComponent("index.html")
+        }
+
+        let archiveURL: URL?
+        if skipArchive {
+            archiveURL = nil
+        } else {
+            let projectURL = URL(fileURLWithPath: path).standardizedFileURL
+            let resolvedArchiveURL = if let archiveOut {
+                URL(fileURLWithPath: archiveOut, relativeTo: projectURL).standardizedFileURL
+            } else {
+                URL(
+                    fileURLWithPath: "\(context.sceneSet.id).zip",
+                    relativeTo: context.outputURL.deletingLastPathComponent()
+                ).standardizedFileURL
+            }
+            try Archive.writeArchive(sourceURL: context.outputURL, archiveURL: resolvedArchiveURL)
+            archiveURL = resolvedArchiveURL
+        }
+
+        print("output: \(context.outputURL.path)")
+        if let galleryIndexURL {
+            print("gallery: \(galleryIndexURL.path)")
+        }
+        if let archiveURL {
+            print("archive: \(archiveURL.path)")
+        }
+    }
+}
+
 struct Archive: ParsableCommand {
     static let configuration = CommandConfiguration(
         abstract: "Package an existing scene-set build output as a zip archive."
@@ -261,7 +341,7 @@ struct Archive: ParsableCommand {
         print(archiveURL.path)
     }
 
-    private static func writeArchive(sourceURL: URL, archiveURL: URL) throws {
+    fileprivate static func writeArchive(sourceURL: URL, archiveURL: URL) throws {
         try FileManager.default.createDirectory(
             at: archiveURL.deletingLastPathComponent(),
             withIntermediateDirectories: true
@@ -435,9 +515,7 @@ struct Init: ParsableCommand {
                     runs-on: ubuntu-latest
                     steps:
                       - uses: actions/checkout@v4
-                      - run: docker run --rm -v "$PWD":/workspace ghcr.io/gitci-labs/screens:main build /workspace
-                      - run: docker run --rm -v "$PWD":/workspace ghcr.io/gitci-labs/screens:main gallery /workspace
-                      - run: docker run --rm -v "$PWD":/workspace ghcr.io/gitci-labs/screens:main archive /workspace
+                      - run: docker run --rm -v "$PWD":/workspace ghcr.io/gitci-labs/screens:main export /workspace
                       - uses: actions/upload-artifact@v4
                         with:
                           name: gitci-screens

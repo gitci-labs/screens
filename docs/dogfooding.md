@@ -47,12 +47,10 @@ gitci-screens validate . --scene-set launch
 
 Use `--json` in CI or editor integrations.
 
-## 5. Build, Review, Archive
+## 5. Export
 
 ```sh
-gitci-screens build . --scene-set launch
-gitci-screens gallery . --scene-set launch
-gitci-screens archive . --scene-set launch
+gitci-screens export . --scene-set launch
 ```
 
 Outputs land under:
@@ -62,6 +60,14 @@ gitci/screens/build/launch/
 ```
 
 The zip archive at `gitci/screens/build/launch.zip` is suitable for CI artifacts or handoff. The gallery at `gitci/screens/build/launch/gallery/index.html` shows discovered templates plus built outputs and simulated App Store gaps.
+
+When iterating on one step, the underlying commands are still available:
+
+```sh
+gitci-screens build . --scene-set launch
+gitci-screens gallery . --scene-set launch
+gitci-screens archive . --scene-set launch
+```
 
 ## Notes
 

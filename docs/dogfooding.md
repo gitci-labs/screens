@@ -21,12 +21,14 @@ Use the starter scene set template and fill any screenshots you already have:
 gitci-screens scene-sets create . \
   --template gitci.core.basic-launch \
   --id launch \
+  --variant hero=device \
   --asset hero=Screenshots/iphone/hero.png \
   --asset detail=Screenshots/iphone/detail.png \
   --asset overview=Screenshots/ipad/overview.png
 ```
 
 The `--asset` name is matched against the placeholder asset basename in the template. The CLI copies each source file into `gitci/screens/assets/...` and rewrites the scene set manifest to point at the copied file.
+The `--variant` name is matched against a scene-set template slot id so you can choose a different preset without editing JSON.
 
 ## 3. Refresh Screenshots Later
 

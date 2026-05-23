@@ -584,6 +584,13 @@ struct SceneSets: ParsableCommand {
         )
         var asset: [String] = []
 
+        @Option(
+            name: .long,
+            parsing: .upToNextOption,
+            help: "Variant selection in slot=variant form, for example hero=device."
+        )
+        var variant: [String] = []
+
         @Flag(name: .long, help: "Overwrite an existing scene-set manifest.")
         var force = false
 
@@ -605,6 +612,10 @@ struct SceneSets: ParsableCommand {
             if let name {
                 sceneSet.name = name
             }
+            sceneSet = try Self.applyVariantOverrides(
+                try Self.parseVariantOverrides(variant),
+                to: sceneSet
+            )
             let assetOverrides = try Self.parseAssetOverrides(asset)
 
             let sceneSetRoot = screensRoot
@@ -629,6 +640,52 @@ struct SceneSets: ParsableCommand {
             }
 
             print(manifestURL.path)
+        }
+
+        private static func parseVariantOverrides(_ values: [String]) throws -> [String: String] {
+            var overrides: [String: String] = [:]
+            for value in values {
+                guard let separator = value.firstIndex(of: "=") else {
+                    throw ValidationError("Invalid --variant value '\(value)'. Use slot=variant.")
+                }
+                let slotID = String(value[..<separator])
+                let variantID = String(value[value.index(after: separator)...])
+                guard !slotID.isEmpty, !variantID.isEmpty else {
+                    throw ValidationError("Invalid --variant value '\(value)'. Use slot=variant.")
+                }
+                overrides[slotID] = variantID
+            }
+            return overrides
+        }
+
+        private static func applyVariantOverrides(
+            _ overrides: [String: String],
+            to sceneSet: SceneSetManifest
+        ) throws -> SceneSetManifest {
+            guard !overrides.isEmpty else {
+                return sceneSet
+            }
+
+            var unmatched = Set(overrides.keys)
+            var updated = sceneSet
+            updated.slots = try sceneSet.slots.map { slot in
+                guard let selectedVariant = overrides[slot.id] else {
+                    return slot
+                }
+                guard slot.variants.contains(where: { $0.id == selectedVariant }) else {
+                    throw ValidationError("Slot \(slot.id) has no variant \(selectedVariant).")
+                }
+                unmatched.remove(slot.id)
+                var updatedSlot = slot
+                updatedSlot.selectedVariant = selectedVariant
+                return updatedSlot
+            }
+
+            if let first = unmatched.sorted().first {
+                throw ValidationError("No slot matched --variant \(first).")
+            }
+
+            return updated
         }
 
         fileprivate static func parseAssetOverrides(_ values: [String]) throws -> [String: URL] {

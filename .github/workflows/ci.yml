@@ -90,7 +90,7 @@ jobs:
               "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAFgwJ/lP7YzgAAAABJRU5ErkJggg=="
           ))
           PY
-          .build/debug/gitci-screens scene-sets create "$tmpdir" --template gitci.core.basic-launch --id launch-template --asset "hero=$tmpdir/hero-source.png"
+          .build/debug/gitci-screens scene-sets create "$tmpdir" --template gitci.core.basic-launch --id launch-template --variant "hero=device" --asset "hero=$tmpdir/hero-source.png"
           .build/debug/gitci-screens scene-sets fill-assets "$tmpdir" --scene-set launch-template --asset "detail=$tmpdir/hero-source.png"
           .build/debug/gitci-screens validate "$tmpdir"
           .build/debug/gitci-screens validate "$tmpdir" --strict
@@ -102,6 +102,7 @@ jobs:
           test -f "$tmpdir/gitci/screens/build/launch-template/gallery/index.html"
           test -f "$tmpdir/gitci/screens/build/launch-template.zip"
           grep -q "hero.png" "$tmpdir/gitci/screens/scene-sets/launch-template/scene-set.gitci.json"
+          grep -q '"selectedVariant" : "device"' "$tmpdir/gitci/screens/scene-sets/launch-template/scene-set.gitci.json"
           grep -q "detail.png" "$tmpdir/gitci/screens/scene-sets/launch-template/scene-set.gitci.json"
       - run: test -f examples/minimal/gitci/screens/build/launch/appstore.iphone.6_9.portrait/01-hero.png
       - run: test -f examples/minimal/gitci/screens/build/launch/appstore.iphone.6_9.portrait/02-workflow.png

@@ -41,6 +41,12 @@ The current built-in App Store targets are:
 .build/debug/gitci-screens init path/to/my-app --name "My App"
 ```
 
+You can also run the packaged Docker image once it has been published:
+
+```sh
+docker run --rm -v "$PWD":/workspace ghcr.io/gitci-labs/screens:main build /workspace/examples/minimal
+```
+
 By convention, a project has a `gitci/screens` directory containing `project.gitci.json`, assets, and one or more `scene-sets`.
 
 Projects can declare reusable template roots in `project.gitci.json` with local `sources`; packaged installs can also provide `GITCI_SCREENS_TEMPLATES_ROOT`.

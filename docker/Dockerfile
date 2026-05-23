@@ -6,6 +6,8 @@ COPY Tests ./Tests
 RUN swift build -c release
 
 FROM mcr.microsoft.com/playwright:v1.60.0-noble AS runtime
+LABEL org.opencontainers.image.source="https://github.com/gitci-labs/screens"
+LABEL org.opencontainers.image.description="GitCI Screens CLI and Playwright renderer"
 RUN apt-get update && apt-get install -y --no-install-recommends \
   ca-certificates \
   curl \

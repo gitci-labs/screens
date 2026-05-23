@@ -102,13 +102,13 @@ public struct ProjectValidator: Sendable {
 
     private func warningsForProjectSources() -> [ProjectDiagnostic] {
         (workspace.project?.sources ?? []).compactMap { source in
-            guard source.kind != "local" else {
+            guard source.kind != "local", source.kind != "githubRelease" else {
                 return nil
             }
             return ProjectDiagnostic(
                 severity: .warning,
-                code: "project.source-not-downloaded",
-                message: "Project source \(source.id) uses kind \(source.kind); this MVP only resolves local, packaged, cached, and environment-provided template roots.",
+                code: "project.source-unsupported",
+                message: "Project source \(source.id) uses unsupported kind \(source.kind); supported source kinds are local and githubRelease.",
                 sourceId: source.id
             )
         }

@@ -76,6 +76,31 @@ final class WorkspacePlanningTests: XCTestCase {
         XCTAssertEqual(diagnostic.outputPath, "appstore.iphone.6_9.portrait/01-hero.png")
     }
 
+    func testGithubReleaseSourcesAreSupportedValidationInputs() throws {
+        let root = try exampleRoot()
+        var workspace = try ScreensWorkspace.load(root: root)
+        workspace.project = ProjectManifest(
+            schemaVersion: 1,
+            id: "com.example",
+            name: "Example",
+            sources: [
+                ProjectSource(
+                    id: "gitci.core",
+                    kind: "githubRelease",
+                    path: nil,
+                    repo: "gitci-labs/screens-templates",
+                    version: "v0.1.0"
+                )
+            ],
+            defaultSceneSet: "launch",
+            assetPolicy: nil
+        )
+        let sceneSet = try workspace.resolveSceneSet(id: "launch")
+        let report = ProjectValidator(workspace: workspace).validate(sceneSet: sceneSet)
+
+        XCTAssertFalse(report.diagnostics.contains { $0.code == "project.source-unsupported" })
+    }
+
     func testOutputManifestCarriesSpanClipMetadata() throws {
         let root = try exampleRoot()
         let workspace = try ScreensWorkspace.load(root: root)

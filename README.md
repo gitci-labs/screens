@@ -39,6 +39,7 @@ The current built-in App Store targets are:
 .build/debug/gitci-screens validate examples/minimal
 .build/debug/gitci-screens plan examples/minimal --scene-set launch
 .build/debug/gitci-screens build examples/minimal --scene-set launch
+.build/debug/gitci-screens archive examples/minimal --scene-set launch
 .build/debug/gitci-screens gallery examples/minimal --scene-set launch
 .build/debug/gitci-screens init path/to/my-app --name "My App"
 .build/debug/gitci-screens templates install --repo gitci-labs/screens-templates --version v0.1.0 --archive path/to/screens-templates-v0.1.0.tar.gz
@@ -67,7 +68,7 @@ mise run package-local
 
 `init` writes a placeholder SVG screenshot so the generated project can be validated and rendered immediately. Replace `gitci/screens/assets/iphone/screenshot.svg` with a real app screenshot when you are ready.
 
-`build` writes `manifest.gitci-output.json` next to the render plan. The output manifest includes each screenshot's target dimensions plus span, span index, composite canvas, display gap, and clip rectangle metadata so galleries and future editors can reconstruct wide scenes precisely. `gallery` writes a static HTML index under the selected scene set build directory.
+`build` writes `manifest.gitci-output.json` next to the render plan. The output manifest includes each screenshot's target dimensions plus span, span index, composite canvas, display gap, and clip rectangle metadata so galleries and future editors can reconstruct wide scenes precisely. `archive` zips an existing scene-set build directory for CI artifacts or sharing. `gallery` writes a static HTML index under the selected scene set build directory.
 
 ## Current Scope
 

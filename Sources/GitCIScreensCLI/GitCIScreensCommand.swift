@@ -16,6 +16,7 @@ struct GitCIScreensCommand: AsyncParsableCommand {
             Validate.self,
             Plan.self,
             Build.self,
+            Archive.self,
             Gallery.self,
             Init.self,
             Templates.self
@@ -216,6 +217,60 @@ struct Build: AsyncParsableCommand {
         try await RendererInvoker(renderer: renderer).render(planURL: context.planURL)
         try context.writeOutputManifest()
         print(context.outputURL.path)
+    }
+}
+
+struct Archive: ParsableCommand {
+    static let configuration = CommandConfiguration(
+        abstract: "Package an existing scene-set build output as a zip archive."
+    )
+
+    @Argument(help: "Project path. Defaults to current directory.")
+    var path: String = "."
+
+    @Option(name: .long, help: "Scene set id.")
+    var sceneSet: String?
+
+    @Option(name: .long, help: "Zip output path.")
+    var out: String?
+
+    func run() throws {
+        let context = try BuildContext(path: path, sceneSet: sceneSet, out: nil).load()
+        let manifestURL = context.outputURL.appendingPathComponent("manifest.gitci-output.json")
+        guard FileManager.default.fileExists(atPath: manifestURL.path) else {
+            throw ValidationError("No build manifest found at \(manifestURL.path). Run `gitci-screens build` first.")
+        }
+
+        let projectURL = URL(fileURLWithPath: path).standardizedFileURL
+        let archiveURL = if let out {
+            URL(fileURLWithPath: out, relativeTo: projectURL).standardizedFileURL
+        } else {
+            URL(
+                fileURLWithPath: "\(context.sceneSet.id).zip",
+                relativeTo: context.outputURL.deletingLastPathComponent()
+            ).standardizedFileURL
+        }
+
+        try Self.writeArchive(sourceURL: context.outputURL, archiveURL: archiveURL)
+        print(archiveURL.path)
+    }
+
+    private static func writeArchive(sourceURL: URL, archiveURL: URL) throws {
+        try FileManager.default.createDirectory(
+            at: archiveURL.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try? FileManager.default.removeItem(at: archiveURL)
+
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+        process.currentDirectoryURL = sourceURL
+        process.arguments = ["zip", "-qry", archiveURL.path, "."]
+        try process.run()
+        process.waitUntilExit()
+        guard process.terminationStatus == 0 else {
+            throw ValidationError("Could not create zip archive at \(archiveURL.path). Ensure `zip` is installed.")
+        }
     }
 }
 

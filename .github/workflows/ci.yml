@@ -67,6 +67,17 @@ jobs:
           test -d "$tmpdir/cache/screens-templates/v0.0.0/gitci/screens/packs"
       - run: .build/debug/gitci-screens build examples/minimal
       - run: .build/debug/gitci-screens gallery examples/minimal
+      - run: .build/debug/gitci-screens archive examples/minimal
+      - run: |
+          python3 - <<'PY'
+          import zipfile
+          archive = 'examples/minimal/gitci/screens/build/launch.zip'
+          with zipfile.ZipFile(archive) as zf:
+              names = set(zf.namelist())
+          assert 'manifest.gitci-output.json' in names
+          assert 'appstore.iphone.6_9.portrait/01-hero.png' in names
+          print(archive)
+          PY
       - run: |
           tmpdir="$(mktemp -d)"
           .build/debug/gitci-screens init "$tmpdir" --name "CI Init Smoke"

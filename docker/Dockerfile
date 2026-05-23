@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   ca-certificates \
   curl \
   git \
+  zip \
   && rm -rf /var/lib/apt/lists/*
 
 COPY --from=swift-build /src/.build/release/gitci-screens /usr/local/bin/gitci-screens

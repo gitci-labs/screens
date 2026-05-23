@@ -258,6 +258,40 @@ final class WorkspacePlanningTests: XCTestCase {
         XCTAssertEqual(found.path, jsURL.standardizedFileURL.path)
     }
 
+    func testCachedTemplateCandidatesUseCurrentScreensTemplatesName() throws {
+        let home = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+        let project = ProjectManifest(
+            schemaVersion: 1,
+            id: "com.example",
+            name: "Example",
+            sources: [
+                ProjectSource(
+                    id: "gitci.core",
+                    kind: "githubRelease",
+                    path: nil,
+                    repo: "gitci-labs/screens-templates",
+                    version: "v0.1.0"
+                )
+            ],
+            defaultSceneSet: nil,
+            assetPolicy: nil
+        )
+        defer {
+            try? FileManager.default.removeItem(at: home)
+        }
+
+        let candidates = ScreensWorkspace.cachedTemplateCandidates(home: home, project: project)
+
+        XCTAssertEqual(
+            candidates.first?.path,
+            home
+                .appendingPathComponent(".gitci/screens/templates/screens-templates/v0.1.0/gitci/screens")
+                .standardizedFileURL
+                .path
+        )
+    }
+
     private func exampleRoot() throws -> URL {
         let packageRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()

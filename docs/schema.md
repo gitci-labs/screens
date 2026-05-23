@@ -25,7 +25,7 @@ Phase 1 uses versioned JSON manifests that Swift can parse without executing Rea
 }
 ```
 
-`sources` can point at local reusable template roots that contain a `packs` directory. `githubRelease` sources are part of the schema but are not downloaded by the MVP yet; packaged and cached template releases are discovered separately.
+`sources` can point at local reusable template roots that contain a `packs` directory. `githubRelease` sources are part of the schema but are not downloaded by the MVP yet. If a matching release has already been installed into the local cache, the CLI looks under `~/.gitci/screens/templates/<repo-name>/<version>/gitci/screens`; for example `gitci-labs/screens-templates` version `v0.1.0` resolves to `~/.gitci/screens/templates/screens-templates/v0.1.0/gitci/screens`. Packaged template roots and `GITCI_SCREENS_TEMPLATES_ROOT` are also discovered.
 
 ## Scene Set
 

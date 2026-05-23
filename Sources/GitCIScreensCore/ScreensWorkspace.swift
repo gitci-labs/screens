@@ -115,26 +115,9 @@ public struct ScreensWorkspace: Sendable {
             }
             roots.append(sourceURL)
         }
-        if let home = fm.homeDirectoryForCurrentUser.path.nilIfEmpty {
-            let cacheURL = URL(fileURLWithPath: home)
-                .appendingPathComponent(".gitci")
-                .appendingPathComponent("screens")
-                .appendingPathComponent("templates")
-                .appendingPathComponent("gitci-screens-templates")
-            if let versions = try? fm.contentsOfDirectory(
-                at: cacheURL,
-                includingPropertiesForKeys: [.isDirectoryKey],
-                options: [.skipsHiddenFiles]
-            ) {
-                for versionURL in versions.sorted(by: { $0.lastPathComponent > $1.lastPathComponent }) {
-                    let candidate = versionURL
-                        .appendingPathComponent("gitci")
-                        .appendingPathComponent("screens")
-                    if fm.fileExists(atPath: candidate.appendingPathComponent("packs").path) {
-                        roots.append(candidate)
-                        break
-                    }
-                }
+        for candidate in cachedTemplateCandidates(home: fm.homeDirectoryForCurrentUser, project: project) {
+            if fm.fileExists(atPath: candidate.appendingPathComponent("packs").path) {
+                roots.append(candidate)
             }
         }
         if let override = ProcessInfo.processInfo.environment["GITCI_SCREENS_TEMPLATES_ROOT"] {
@@ -171,6 +154,50 @@ public struct ScreensWorkspace: Sendable {
         var seen = Set<String>()
         return roots.map(\.standardizedFileURL).filter { root in
             seen.insert(root.path).inserted
+        }
+    }
+
+    public static func cachedTemplateCandidates(home: URL, project: ProjectManifest?) -> [URL] {
+        let templatesRoot = home
+            .appendingPathComponent(".gitci")
+            .appendingPathComponent("screens")
+            .appendingPathComponent("templates")
+        var candidates: [URL] = []
+
+        for source in project?.sources ?? [] where source.kind == "githubRelease" {
+            guard let repoName = source.repo?.split(separator: "/").last.map(String.init) else {
+                continue
+            }
+            let version = source.version ?? "latest"
+            candidates.append(
+                templatesRoot
+                    .appendingPathComponent(repoName)
+                    .appendingPathComponent(version)
+                    .appendingPathComponent("gitci")
+                    .appendingPathComponent("screens")
+            )
+        }
+
+        for repositoryName in ["screens-templates", "gitci-screens-templates"] {
+            let repositoryCache = templatesRoot.appendingPathComponent(repositoryName)
+            if let versions = try? FileManager.default.contentsOfDirectory(
+                at: repositoryCache,
+                includingPropertiesForKeys: [.isDirectoryKey],
+                options: [.skipsHiddenFiles]
+            ) {
+                for versionURL in versions.sorted(by: { $0.lastPathComponent > $1.lastPathComponent }) {
+                    candidates.append(
+                        versionURL
+                            .appendingPathComponent("gitci")
+                            .appendingPathComponent("screens")
+                    )
+                }
+            }
+        }
+
+        var seen = Set<String>()
+        return candidates.map(\.standardizedFileURL).filter { candidate in
+            seen.insert(candidate.path).inserted
         }
     }
 

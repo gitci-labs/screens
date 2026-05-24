@@ -3,10 +3,12 @@ import Foundation
 public struct RendererInvoker: Sendable {
     public var renderer: String
     public var failOnOverflow: Bool
+    public var jsWorkspaceURL: URL?
 
-    public init(renderer: String, failOnOverflow: Bool = false) {
+    public init(renderer: String, failOnOverflow: Bool = false, jsWorkspaceURL: URL? = nil) {
         self.renderer = renderer
         self.failOnOverflow = failOnOverflow
+        self.jsWorkspaceURL = jsWorkspaceURL
     }
 
     public func render(planURL: URL) async throws {
@@ -19,7 +21,12 @@ public struct RendererInvoker: Sendable {
     }
 
     private func runNodePlaywright(planURL: URL) async throws {
-        let jsWorkspace = try Self.findJSWorkspace()
+        #if os(macOS)
+        let jsWorkspace = if let jsWorkspaceURL {
+            jsWorkspaceURL.standardizedFileURL
+        } else {
+            try Self.findJSWorkspace()
+        }
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
         var arguments = [
@@ -40,6 +47,10 @@ public struct RendererInvoker: Sendable {
         guard process.terminationStatus == 0 else {
             throw ScreensError.rendererFailed(process.terminationStatus)
         }
+        #else
+        _ = planURL
+        throw ScreensError.unsupportedRenderer("node-playwright")
+        #endif
     }
 
     public static func findJSWorkspace(

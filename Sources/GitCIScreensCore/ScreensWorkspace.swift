@@ -118,7 +118,7 @@ public struct ScreensWorkspace: Sendable {
             }
             roots.append(sourceURL)
         }
-        for candidate in cachedTemplateCandidates(cacheRoot: templateCacheRoot(home: fm.homeDirectoryForCurrentUser), project: project) {
+        for candidate in cachedTemplateCandidates(cacheRoot: templateCacheRoot(home: currentUserHomeDirectory()), project: project) {
             if fm.fileExists(atPath: candidate.appendingPathComponent("packs").path) {
                 roots.append(candidate)
             }
@@ -210,6 +210,10 @@ public struct ScreensWorkspace: Sendable {
             return URL(fileURLWithPath: override).standardizedFileURL
         }
         return defaultTemplateCacheRoot(home: home)
+    }
+
+    private static func currentUserHomeDirectory() -> URL {
+        URL(fileURLWithPath: NSHomeDirectory(), isDirectory: true)
     }
 
     private static func defaultTemplateCacheRoot(home: URL) -> URL {

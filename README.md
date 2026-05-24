@@ -95,6 +95,7 @@ Implemented:
 - palette-mapped theme variables with explicit overrides
 - one built-in React scene template: `gitci.core.hero-device`
 - one feature scene template: `gitci.core.feature-closeup`
+- one bold keyword-card scene template: `gitci.core.keyword-cards`
 - project-local scene template packs rendered through generated Vite registry bundles
 - CSS 2D device frame plus an experimental React Three Fiber 3D device component
 - output manifests and a minimal static gallery

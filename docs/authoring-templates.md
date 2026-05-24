@@ -4,6 +4,7 @@ Templates are React components registered by id. The bundled core pack currently
 
 - `gitci.core.hero-device`
 - `gitci.core.feature-closeup`
+- `gitci.core.keyword-cards`
 
 The Swift planner only needs a manifest-level template id and constraints. The renderer resolves the id through a registry.
 

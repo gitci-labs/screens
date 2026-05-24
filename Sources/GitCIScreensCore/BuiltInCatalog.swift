@@ -101,9 +101,22 @@ public enum BuiltInCatalog {
             exportName: "FeatureCloseupScene",
             resolvedEntry: "@gitci/screens-templates-core"
         )
+        let keywordCards = SceneTemplateRecord(
+            id: "gitci.core.keyword-cards",
+            name: "Keyword Cards",
+            constraints: SceneTemplateConstraints(minAspectRatio: 0.42),
+            requiredProps: ["screenshot"],
+            pack: "gitci.core",
+            tags: ["headline", "keywords", "card", "bold", "app-store"],
+            supportedTargets: ["appstore.iphone.*", "appstore.ipad.*", "appstore.mac.*"],
+            entry: "@gitci/screens-templates-core",
+            exportName: "KeywordCardsScene",
+            resolvedEntry: "@gitci/screens-templates-core"
+        )
         return [
             hero.id: hero,
-            featureCloseup.id: featureCloseup
+            featureCloseup.id: featureCloseup,
+            keywordCards.id: keywordCards
         ]
     }()
 

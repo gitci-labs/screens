@@ -2,6 +2,14 @@ import XCTest
 @testable import GitCIScreensCore
 
 final class WorkspacePlanningTests: XCTestCase {
+    func testBuiltInCatalogIncludesKeywordCardsTemplate() {
+        let template = BuiltInCatalog.sceneTemplates["gitci.core.keyword-cards"]
+
+        XCTAssertEqual(template?.name, "Keyword Cards")
+        XCTAssertEqual(template?.exportName, "KeywordCardsScene")
+        XCTAssertEqual(template?.requiredProps, ["screenshot"])
+    }
+
     func testLoadsExampleSceneSetAndPlansAllCanonicalTargets() throws {
         let root = try exampleRoot()
         let workspace = try ScreensWorkspace.load(root: root)

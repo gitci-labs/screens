@@ -1,0 +1,68 @@
+{
+  "$schema": "https://screens.gitci.com/schemas/scene-template.gitci.schema.json",
+  "schemaVersion": 1,
+  "id": "gitci.core.keyword-cards",
+  "name": "Keyword Cards",
+  "pack": "gitci.core",
+  "entry": "@gitci/screens-templates-core",
+  "export": "KeywordCardsScene",
+  "tags": ["headline", "keywords", "card", "bold", "app-store"],
+  "minAspectRatio": 0.42,
+  "supportedTargets": ["appstore.iphone.*", "appstore.ipad.*", "appstore.mac.*"],
+  "propsSchema": {
+    "type": "object",
+    "required": ["screenshot"],
+    "properties": {
+      "headline": {
+        "type": "string",
+        "title": "Headline"
+      },
+      "highlightedWords": {
+        "type": "array",
+        "items": { "type": "string" }
+      },
+      "headlineLines": {
+        "type": "array",
+        "title": "Headline Lines"
+      },
+      "subheadline": {
+        "type": "string",
+        "title": "Subheadline"
+      },
+      "screenshot": {
+        "$ref": "#/$defs/assetRef"
+      },
+      "mediaMode": {
+        "type": "string",
+        "enum": ["photo", "device"],
+        "default": "device"
+      },
+      "device": {
+        "type": "string",
+        "enum": ["iphone-2d", "ipad-2d", "mac-2d"],
+        "default": "iphone-2d"
+      },
+      "badge": {
+        "type": "object"
+      }
+    }
+  },
+  "previewProps": {
+    "headlineLines": [
+      [{ "text": "Microplastics" }],
+      [{ "text": "Food", "emphasis": true }, { "text": "Scan" }]
+    ],
+    "subheadline": "Use tilted keyword cards to make the key phrase impossible to miss.",
+    "screenshot": {
+      "kind": "asset",
+      "path": "./preview-assets/iphone-reader.png"
+    },
+    "mediaMode": "device",
+    "device": "iphone-2d",
+    "badge": {
+      "label": "HIGH",
+      "value": "250 ng/g",
+      "tone": "warning"
+    }
+  }
+}

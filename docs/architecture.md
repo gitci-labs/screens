@@ -17,7 +17,11 @@ React owns visual layout:
 - device frames
 - future Three.js and anime.js composition
 
-The boundary is `plan.gitci-render.json`. The renderer should not rediscover project files; it receives the full output plan and fails if a referenced template or asset is unavailable.
+The boundary for final rendering is `plan.gitci-render.json`. The renderer should not rediscover project files; it receives the full output plan and fails if a referenced template or asset is unavailable.
+
+The boundary for authoring is an evaluated scene-set model. A `scene-set.gitci.json` file may be only an index with `id`, `entry`, and `export`; Swift asks a `SceneSetEvaluator` to materialize the authored TSX into a `SceneSetManifest` before validation. The sandbox app evaluator runs the authoring bundle in WebView with `esbuild-wasm`, so Swift can reason about React-authored scene sets without a Node process or a redundant JSON copy.
+
+Native editing is driven by `EditableSceneSetDocument` and `SceneSetEdit`. SwiftUI forms and WYSIWYG controls patch stable slot/variant/prop paths, the preview updates from the edited model, and source syncing can rewrite the TSX as a separate transaction. See `docs/live-editor.md` for the two-way sync model.
 
 The authoritative renderer is Node + Playwright + Chromium. The current renderer uses exact viewport dimensions, `deviceScaleFactor = 1`, CSS-pixel screenshot scaling, disabled animations, hidden carets, and clip rectangles for multi-frame scene spans.
 

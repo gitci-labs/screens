@@ -4,6 +4,8 @@ public enum ScreensError: Error, CustomStringConvertible, Equatable {
     case missingScreensRoot(URL)
     case unsupportedSchema(file: String, version: Int)
     case noSceneSets(URL)
+    case sceneSetRequiresEvaluation(id: String, path: String)
+    case invalidSceneSetEvaluationResult(id: String, reason: String)
     case unknownSceneSet(String)
     case unknownTarget(String)
     case unknownSceneTemplate(String)
@@ -37,6 +39,10 @@ public enum ScreensError: Error, CustomStringConvertible, Equatable {
             return "Unsupported schemaVersion \(version) in \(file)."
         case let .noSceneSets(url):
             return "No scene sets found under \(url.path)/scene-sets."
+        case let .sceneSetRequiresEvaluation(id, path):
+            return "Scene set \(id) at \(path) points at React/TSX source and requires a scene set evaluator."
+        case let .invalidSceneSetEvaluationResult(id, reason):
+            return "Scene set \(id) evaluated to an invalid definition: \(reason)."
         case let .unknownSceneSet(id):
             return "Unknown scene set: \(id)."
         case let .unknownTarget(id):

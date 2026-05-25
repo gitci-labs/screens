@@ -10,6 +10,46 @@ final class WorkspacePlanningTests: XCTestCase {
         XCTAssertEqual(template?.requiredProps, ["screenshot"])
     }
 
+    func testEvaluatesReactAuthoredSceneSetBeforePlanning() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+            .appendingPathComponent("gitci")
+            .appendingPathComponent("screens")
+        let sceneSetRoot = root.appendingPathComponent("scene-sets/launch")
+        try FileManager.default.createDirectory(at: sceneSetRoot, withIntermediateDirectories: true)
+        defer {
+            try? FileManager.default.removeItem(
+                at: root
+                    .deletingLastPathComponent()
+                    .deletingLastPathComponent()
+            )
+        }
+        try """
+        {
+          "schemaVersion": 1,
+          "id": "launch",
+          "name": "Launch",
+          "entry": "./scene-set.tsx",
+          "export": "sceneSet"
+        }
+        """.write(
+            to: sceneSetRoot.appendingPathComponent("scene-set.gitci.json"),
+            atomically: true,
+            encoding: .utf8
+        )
+
+        let workspace = try await ScreensWorkspace.load(
+            root: root,
+            sceneSetEvaluator: FakeSceneSetEvaluator()
+        )
+        let sceneSet = try workspace.resolveSceneSet(id: "launch")
+
+        XCTAssertEqual(sceneSet.manifest.targets, ["appstore.iphone.6_9.portrait"])
+        XCTAssertEqual(sceneSet.manifest.slots.map(\.id), ["hero"])
+        XCTAssertEqual(sceneSet.manifest.entry, "./scene-set.tsx")
+        XCTAssertEqual(sceneSet.manifest.export, "sceneSet")
+    }
+
     func testLoadsExampleSceneSetAndPlansAllCanonicalTargets() throws {
         let root = try exampleRoot()
         let workspace = try ScreensWorkspace.load(root: root)
@@ -899,5 +939,39 @@ final class WorkspacePlanningTests: XCTestCase {
             .appendingPathComponent("minimal")
             .appendingPathComponent("gitci")
             .appendingPathComponent("screens")
+    }
+}
+
+private struct FakeSceneSetEvaluator: SceneSetEvaluator {
+    @MainActor
+    func evaluateSceneSet(
+        manifest: SceneSetManifest,
+        manifestURL: URL
+    ) async throws -> SceneSetManifest {
+        _ = manifestURL
+        return SceneSetManifest(
+            schemaVersion: 1,
+            id: manifest.id,
+            name: manifest.name,
+            targets: ["appstore.iphone.6_9.portrait"],
+            slots: [
+                SceneSlot(
+                    id: "hero",
+                    label: "Hero",
+                    selectedVariant: "default",
+                    variants: [
+                        SceneVariant(
+                            id: "default",
+                            sceneTemplate: "gitci.core.hero-device",
+                            includeTargets: nil,
+                            excludeTargets: nil,
+                            props: .object([
+                                "headline": .string("React-authored")
+                            ])
+                        )
+                    ]
+                )
+            ]
+        )
     }
 }

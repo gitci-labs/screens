@@ -178,6 +178,65 @@ public struct SceneSetManifest: Codable, Equatable, Sendable {
     public var locales: [SceneSetLocale]?
     public var variantGroups: [SceneSetVariantGroup]?
     public var slots: [SceneSlot]
+
+    public init(
+        schemaVersion: Int,
+        id: String,
+        name: String? = nil,
+        entry: String? = nil,
+        export: String? = nil,
+        targets: [String] = [],
+        appearanceByTarget: [String: Appearance]? = nil,
+        theme: ThemeSelection? = nil,
+        locales: [SceneSetLocale]? = nil,
+        variantGroups: [SceneSetVariantGroup]? = nil,
+        slots: [SceneSlot] = []
+    ) {
+        self.schemaVersion = schemaVersion
+        self.id = id
+        self.name = name
+        self.entry = entry
+        self.export = export
+        self.targets = targets
+        self.appearanceByTarget = appearanceByTarget
+        self.theme = theme
+        self.locales = locales
+        self.variantGroups = variantGroups
+        self.slots = slots
+    }
+
+    public var requiresEvaluation: Bool {
+        entry != nil && `export` != nil && (targets.isEmpty || slots.isEmpty)
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case schemaVersion
+        case id
+        case name
+        case entry
+        case `export`
+        case targets
+        case appearanceByTarget
+        case theme
+        case locales
+        case variantGroups
+        case slots
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        schemaVersion = try container.decode(Int.self, forKey: .schemaVersion)
+        id = try container.decode(String.self, forKey: .id)
+        name = try container.decodeIfPresent(String.self, forKey: .name)
+        entry = try container.decodeIfPresent(String.self, forKey: .entry)
+        `export` = try container.decodeIfPresent(String.self, forKey: .export)
+        targets = try container.decodeIfPresent([String].self, forKey: .targets) ?? []
+        appearanceByTarget = try container.decodeIfPresent([String: Appearance].self, forKey: .appearanceByTarget)
+        theme = try container.decodeIfPresent(ThemeSelection.self, forKey: .theme)
+        locales = try container.decodeIfPresent([SceneSetLocale].self, forKey: .locales)
+        variantGroups = try container.decodeIfPresent([SceneSetVariantGroup].self, forKey: .variantGroups)
+        slots = try container.decodeIfPresent([SceneSlot].self, forKey: .slots) ?? []
+    }
 }
 
 public struct SceneSetVariantGroup: Codable, Equatable, Sendable {

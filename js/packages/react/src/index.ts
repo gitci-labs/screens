@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { Children, isValidElement, type ReactElement, type ReactNode } from 'react'
 
 export type Appearance = 'light' | 'dark' | 'automatic'
 
@@ -145,6 +145,106 @@ export function defineSceneSet<T extends SceneSetDefinition>(definition: T): T {
   return definition
 }
 
+export type SceneSetAuthoringProps = Omit<SceneSetDefinition, 'slots' | 'variantGroups'> & {
+  children?: ReactNode
+}
+
+export type SlotAuthoringProps = Omit<SceneSlot, 'variants'> & {
+  children?: ReactNode
+}
+
+export type VariantGroupAuthoringProps = NonNullable<SceneSetDefinition['variantGroups']>[number]
+
+export type SceneAuthoringProps = {
+  id: string
+  template?: string
+  sceneTemplate?: string
+  includeTargets?: string[]
+  excludeTargets?: string[]
+  props?: Record<string, unknown>
+  children?: ReactNode
+  [prop: string]: unknown
+}
+
+export function SceneSet(_props: SceneSetAuthoringProps): null {
+  return null
+}
+
+export function Slot(_props: SlotAuthoringProps): null {
+  return null
+}
+
+export function Scene(_props: SceneAuthoringProps): null {
+  return null
+}
+
+export function VariantGroup(_props: VariantGroupAuthoringProps): null {
+  return null
+}
+
+export function defineSceneSetFromJSX(node: ReactNode): SceneSetDefinition {
+  const element = resolveAuthoringElement(node)
+  assertElementType(element, SceneSet, 'SceneSet')
+
+  const {
+    children,
+    variantGroups: declaredVariantGroups,
+    ...sceneSetProps
+  } = element.props as SceneSetAuthoringProps & {
+    variantGroups?: SceneSetDefinition['variantGroups']
+  }
+  const childElements = childAuthoringElements(children)
+  const variantGroups: NonNullable<SceneSetDefinition['variantGroups']> = [
+    ...(declaredVariantGroups ?? [])
+  ]
+  const slots: SceneSlot[] = []
+
+  for (const child of childElements) {
+    if (child.type === VariantGroup) {
+      const { children: _children, ...variantGroup } = child.props as VariantGroupAuthoringProps & {
+        children?: ReactNode
+      }
+      variantGroups.push(variantGroup)
+    } else if (child.type === Slot) {
+      slots.push(slotFromElement(child))
+    } else {
+      throw new Error('SceneSet children must be <Slot> or <VariantGroup> elements')
+    }
+  }
+
+  return defineSceneSet({
+    ...sceneSetProps,
+    variantGroups: variantGroups.length ? variantGroups : undefined,
+    slots
+  })
+}
+
+export function asset(
+  path: string,
+  options?: string | {
+    alt?: string
+  }
+): AssetRef {
+  return {
+    kind: 'asset',
+    path,
+    alt: typeof options === 'string' ? options : options?.alt
+  }
+}
+
+export function dataAsset(input: {
+  mediaType: string
+  base64: string
+  alt?: string
+}): AssetRef {
+  return {
+    kind: 'data',
+    mediaType: input.mediaType,
+    base64: input.base64,
+    alt: input.alt
+  }
+}
+
 export function defineRegistry<T extends Registry>(registry: T): T {
   return registry
 }
@@ -246,4 +346,80 @@ function makeRect(index: number, x: number, y: number, width: number, height: nu
     centerX: x + width / 2,
     centerY: y + height / 2
   }
+}
+
+function slotFromElement(element: ReactElement): SceneSlot {
+  const { children, ...slotProps } = element.props as SlotAuthoringProps
+  const variants = childAuthoringElements(children).map(child => {
+    assertElementType(child, Scene, 'Scene')
+    return variantFromElement(child)
+  })
+
+  return {
+    ...slotProps,
+    variants
+  }
+}
+
+function variantFromElement(element: ReactElement): SceneVariant {
+  const rawProps = element.props as SceneAuthoringProps
+  const {
+    id,
+    template,
+    sceneTemplate,
+    includeTargets,
+    excludeTargets,
+    props,
+    children: _children,
+    ...inlineProps
+  } = rawProps
+  const resolvedSceneTemplate = sceneTemplate ?? template
+  if (!resolvedSceneTemplate) {
+    throw new Error(`Scene ${id} must provide template or sceneTemplate`)
+  }
+
+  return {
+    id,
+    sceneTemplate: resolvedSceneTemplate,
+    includeTargets,
+    excludeTargets,
+    props: compactObject({
+      ...(props ?? {}),
+      ...inlineProps
+    })
+  }
+}
+
+function childAuthoringElements(children: ReactNode): ReactElement[] {
+  return Children.toArray(children).map(resolveAuthoringElement)
+}
+
+function resolveAuthoringElement(node: ReactNode): ReactElement {
+  if (!isValidElement(node)) {
+    throw new Error('Expected a GitCI Screens JSX authoring element')
+  }
+  if (typeof node.type === 'function' && !isMarkerType(node.type)) {
+    return resolveAuthoringElement(
+      (node.type as (props: unknown) => ReactNode)(node.props)
+    )
+  }
+  return node
+}
+
+function isMarkerType(type: unknown): boolean {
+  return type === SceneSet || type === Slot || type === Scene || type === VariantGroup
+}
+
+function assertElementType(
+  element: ReactElement,
+  expectedType: unknown,
+  expectedName: string
+) {
+  if (element.type !== expectedType) {
+    throw new Error(`Expected <${expectedName}>`)
+  }
+}
+
+function compactObject(input: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(Object.entries(input).filter(([, value]) => value !== undefined))
 }

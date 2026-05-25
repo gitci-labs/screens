@@ -96,6 +96,8 @@ Implemented:
 - one built-in React scene template: `gitci.core.hero-device`
 - one feature scene template: `gitci.core.feature-closeup`
 - one bold keyword-card scene template: `gitci.core.keyword-cards`
+- JSX scene-set authoring helpers for SwiftUI-style `SceneSet` / `Slot` / `Scene` declarations
+- a browser/WebView authoring harness that evaluates TSX scene sets with `esbuild-wasm`
 - project-local scene template packs rendered through generated Vite registry bundles
 - CSS 2D device frame plus an experimental React Three Fiber 3D device component
 - output manifests and a minimal static gallery
@@ -123,6 +125,7 @@ Not implemented yet:
 
 - [Architecture](docs/architecture.md)
 - [Dogfooding workflow](docs/dogfooding.md)
+- [Scene set authoring](docs/authoring-scene-sets.md)
 - [Schemas](docs/schema.md)
 - [Targets](docs/targets.md)
 - [Template authoring](docs/authoring-templates.md)

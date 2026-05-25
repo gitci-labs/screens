@@ -35,6 +35,32 @@ public struct ScreensWorkspace: Sendable {
         )
     }
 
+    public static func load(
+        root: URL,
+        sceneSetEvaluator: (any SceneSetEvaluator)?
+    ) async throws -> ScreensWorkspace {
+        let rootURL = root.standardizedFileURL
+        let project = try loadProjectManifest(rootURL: rootURL)
+        let sceneSets = try await loadSceneSets(rootURL: rootURL, evaluator: sceneSetEvaluator)
+        if sceneSets.isEmpty {
+            throw ScreensError.noSceneSets(rootURL)
+        }
+        let catalog = try loadTemplateCatalog(rootURL: rootURL, project: project)
+
+        return ScreensWorkspace(
+            rootURL: rootURL,
+            project: project,
+            sceneSets: sceneSets,
+            packs: catalog.packs,
+            targets: catalog.targets,
+            sceneTemplates: catalog.sceneTemplates,
+            sceneSetTemplates: catalog.sceneSetTemplates,
+            components: catalog.components,
+            palettes: catalog.palettes,
+            themes: catalog.themes
+        )
+    }
+
     public func resolveSceneSet(id: String?) throws -> LoadedSceneSet {
         let requestedID = id ?? project?.defaultSceneSet ?? sceneSets.first?.id
         guard let requestedID else {
@@ -82,8 +108,92 @@ public struct ScreensWorkspace: Sendable {
                 guard manifest.schemaVersion == 1 else {
                     throw ScreensError.unsupportedSchema(file: manifestURL.path, version: manifest.schemaVersion)
                 }
+                if manifest.requiresEvaluation {
+                    throw ScreensError.sceneSetRequiresEvaluation(id: manifest.id, path: manifestURL.path)
+                }
                 return LoadedSceneSet(manifest: manifest, directoryURL: directory.standardizedFileURL)
             }
+    }
+
+    private static func loadSceneSets(
+        rootURL: URL,
+        evaluator: (any SceneSetEvaluator)?
+    ) async throws -> [LoadedSceneSet] {
+        let sceneSetsURL = rootURL.appendingPathComponent("scene-sets")
+        guard let children = try? FileManager.default.contentsOfDirectory(
+            at: sceneSetsURL,
+            includingPropertiesForKeys: [.isDirectoryKey],
+            options: [.skipsHiddenFiles]
+        ) else {
+            return []
+        }
+
+        var loadedSceneSets: [LoadedSceneSet] = []
+        for directory in children.sorted(by: { $0.lastPathComponent < $1.lastPathComponent }) {
+            guard (try? directory.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true else {
+                continue
+            }
+            let manifestURL = directory.appendingPathComponent("scene-set.gitci.json")
+            guard FileManager.default.fileExists(atPath: manifestURL.path) else {
+                continue
+            }
+            let manifest = try JSONDecoder.gitci.decode(SceneSetManifest.self, from: Data(contentsOf: manifestURL))
+            guard manifest.schemaVersion == 1 else {
+                throw ScreensError.unsupportedSchema(file: manifestURL.path, version: manifest.schemaVersion)
+            }
+
+            let resolvedManifest: SceneSetManifest
+            if manifest.requiresEvaluation {
+                guard let evaluator else {
+                    throw ScreensError.sceneSetRequiresEvaluation(id: manifest.id, path: manifestURL.path)
+                }
+                let evaluated = try await evaluator.evaluateSceneSet(
+                    manifest: manifest,
+                    manifestURL: manifestURL
+                )
+                guard evaluated.schemaVersion == 1 else {
+                    throw ScreensError.unsupportedSchema(file: manifestURL.path, version: evaluated.schemaVersion)
+                }
+                resolvedManifest = try validateEvaluatedSceneSet(
+                    source: manifest,
+                    evaluated: SceneSetEvaluation.merged(manifest: manifest, evaluated: evaluated),
+                    manifestURL: manifestURL
+                )
+            } else {
+                resolvedManifest = manifest
+            }
+
+            loadedSceneSets.append(
+                LoadedSceneSet(manifest: resolvedManifest, directoryURL: directory.standardizedFileURL)
+            )
+        }
+        return loadedSceneSets
+    }
+
+    private static func validateEvaluatedSceneSet(
+        source: SceneSetManifest,
+        evaluated: SceneSetManifest,
+        manifestURL: URL
+    ) throws -> SceneSetManifest {
+        guard evaluated.id == source.id else {
+            throw ScreensError.invalidSceneSetEvaluationResult(
+                id: source.id,
+                reason: "expected id \(source.id), got \(evaluated.id)"
+            )
+        }
+        guard !evaluated.targets.isEmpty else {
+            throw ScreensError.invalidSceneSetEvaluationResult(
+                id: source.id,
+                reason: "no targets returned from \(manifestURL.path)"
+            )
+        }
+        guard !evaluated.slots.isEmpty else {
+            throw ScreensError.invalidSceneSetEvaluationResult(
+                id: source.id,
+                reason: "no slots returned from \(manifestURL.path)"
+            )
+        }
+        return evaluated
     }
 
     private static func loadTemplateCatalog(rootURL: URL, project: ProjectManifest?) throws -> TemplateCatalog {
